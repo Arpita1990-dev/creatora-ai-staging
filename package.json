@@ -14,7 +14,7 @@
   "scripts": {
     "postinstall": "prisma generate --schema prisma/schema.prisma && prisma generate --schema prisma/sqlite-source.prisma",
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run build:agent && next build",
     "start": "next start",
     "lint": "next lint",
     "build:studio": "npm run build -w studio",
