@@ -6776,8 +6776,8 @@ function BillingCredits({ workspace, authFetch, notify, notice }) {
 
 function Credits({ workspace, authFetch, notify }) {
   const plans = [
-    { name: "Free", target: "Individual", price: "₹0", summary: "2 projects · limited image generation" },
-    { name: "Creator", target: "Individual / Creator", price: "₹599", summary: "10 projects · 2 Facebook + 2 Instagram accounts" },
+    { name: "Free", target: "Individual", price: "₹0", summary: "2 projects · 5 AI images · 5 AI videos" },
+    { name: "Creator", target: "Individual / Creator", price: "₹599", summary: "10 projects · 25 AI images · 15 AI videos · 15 AI avatar videos" },
     { name: "Pro", target: "Professional", price: "₹1,499", summary: "Unlimited projects · 5 Facebook + 5 Instagram accounts" },
     { name: "Business", target: "Organization / Team", price: "₹4,999", summary: "10 members · shared workspace · 10 Facebook + 10 Instagram accounts" },
   ];

@@ -7,7 +7,7 @@ import {
 import { requireOrganization } from "@/lib/auth";
 import { publicErrorMessage } from "@/lib/publicErrors";
 import { prisma } from "@/lib/prisma";
-import { assertGenerationEntitlement, workspaceEntitlements } from "@/lib/planCatalog";
+import { assertGenerationEntitlement, assertGenerationQuota, workspaceEntitlements } from "@/lib/planCatalog";
 
 export async function POST(request) {
   try {
@@ -35,10 +35,7 @@ export async function POST(request) {
     }
     const entitlement = await workspaceEntitlements(prisma, user.organizationId);
     assertGenerationEntitlement(entitlement, { kind, avatarVideo: Boolean(avatarConfig?.enabled) });
-    if (kind === "image" && entitlement.imageGenerationLimit != null) {
-      const generated = await prisma.generationJob.count({ where: { organizationId: user.organizationId, type: "IMAGE", status: { not: "FAILED" } } });
-      if (generated >= entitlement.imageGenerationLimit) return NextResponse.json({ error: `The ${entitlement.plan.name} image generation limit has been reached. Upgrade to continue.` }, { status: 403 });
-    }
+    await assertGenerationQuota(prisma, entitlement, { organizationId: user.organizationId, kind, avatarVideo: Boolean(avatarConfig?.enabled) });
     const job = await createGenerationJob({
       campaignId: String(formData.get("campaignId") || ""),
       projectId: String(formData.get("projectId") || ""),

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { PLAN_CATALOG, planRecordData, planEnvId, assertGenerationEntitlement, assertProjectCapacity, assertSocialAccountCapacity, workspaceEntitlements } from "../lib/planCatalog.js";
+import { PLAN_CATALOG, planRecordData, planEnvId, assertGenerationEntitlement, assertGenerationQuota, assertProjectCapacity, assertSocialAccountCapacity, workspaceEntitlements } from "../lib/planCatalog.js";
 import { PRICING_PLANS } from "../lib/pricingPlans.js";
 import { createHmac } from "node:crypto";
 import { verifyCheckoutSignature, verifyWebhookSignature, razorpayRequest } from "../lib/razorpay.js";
@@ -30,9 +30,44 @@ test("authoritative plans match prices, project and social limits", () => {
     assert.equal(plan.maxProjects, projects);
     for (const key of ["maxFacebookAccounts", "maxInstagramAccounts", "maxLinkedInAccounts", "maxYouTubeAccounts"]) assert.equal(plan[key], accounts);
     const display = PRICING_PLANS.find((item) => item.code === code);
-    assert.equal(display.features.find((feature) => feature.text === "AI Avatar Video").included, code !== "free");
+    assert.equal(display.features.find((feature) => feature.text.startsWith("AI Avatar Video")).included, code !== "free");
     assert.ok(!display.features.some((feature) => /up to 2 (Facebook|Instagram)/.test(feature.text)));
   }
+});
+
+test("Free and Creator generation quotas match their advertised allowances without adding plan fields", () => {
+  assert.equal(PLAN_CATALOG.free.maxProjects, 2);
+  assert.equal(PLAN_CATALOG.free.imageGenerationLimit, 5);
+  assert.equal(PLAN_CATALOG.free.videoGenerationLimit, 5);
+  assert.equal(PLAN_CATALOG.free.avatarVideo, false);
+  assert.equal(PLAN_CATALOG.creator.maxProjects, 10);
+  assert.equal(PLAN_CATALOG.creator.imageGenerationLimit, 25);
+  assert.equal(PLAN_CATALOG.creator.videoGenerationLimit, 15);
+  assert.equal(PLAN_CATALOG.creator.avatarVideoGenerationLimit, 15);
+  assert.equal(PLAN_CATALOG.pro.imageGenerationLimit, null);
+  assert.equal(PLAN_CATALOG.business.videoGeneration, true);
+  const record = planRecordData("creator");
+  assert.ok(!Object.hasOwn(record, "videoGenerationLimit"));
+  assert.ok(!Object.hasOwn(record, "avatarVideoGenerationLimit"));
+});
+
+test("generation quotas count non-failed images, standard videos, and avatar videos separately", async () => {
+  const jobs = [
+    { type: "VIDEO", status: "COMPLETED", requestPayload: JSON.stringify({ avatarConfig: null }) },
+    { type: "VIDEO", status: "QUEUED", requestPayload: JSON.stringify({ avatarConfig: { enabled: true } }) },
+    { type: "VIDEO", status: "FAILED", requestPayload: JSON.stringify({ avatarConfig: { enabled: true } }) },
+  ];
+  const prisma = {
+    generationJob: {
+      count: async () => 5,
+      findMany: async ({ where }) => jobs.filter((job) => job.type === where.type && job.status !== "FAILED"),
+    },
+  };
+  const free = { plan: { name: "Free" }, imageGenerationLimit: 5, videoGenerationLimit: 1 };
+  await assert.rejects(() => assertGenerationQuota(prisma, free, { organizationId: "workspace", kind: "image" }), { code: "UPGRADE_REQUIRED" });
+  await assert.rejects(() => assertGenerationQuota(prisma, free, { organizationId: "workspace", kind: "video" }), { code: "UPGRADE_REQUIRED" });
+  await assert.doesNotReject(() => assertGenerationQuota(prisma, { plan: { name: "Creator" }, avatarVideoGenerationLimit: 2 }, { organizationId: "workspace", kind: "video", avatarVideo: true }));
+  await assert.rejects(() => assertGenerationQuota(prisma, { plan: { name: "Creator" }, avatarVideoGenerationLimit: 1 }, { organizationId: "workspace", kind: "video", avatarVideo: true }), { code: "UPGRADE_REQUIRED" });
 });
 
 test("avatar entitlement uses existing features JSON without schema changes", () => {
@@ -43,10 +78,10 @@ test("avatar entitlement uses existing features JSON without schema changes", ()
   assert.ok(!JSON.stringify(data).includes("Infinity"));
 });
 
-test("Free rejects video/avatar; Creator, Pro and Business allow avatars", () => {
+test("Free allows standard video but not avatars; paid plans allow avatars", () => {
   for (const code of ["creator", "pro", "business"]) assert.doesNotThrow(() => assertGenerationEntitlement(PLAN_CATALOG[code], { kind: "video", avatarVideo: true }));
   assert.throws(() => assertGenerationEntitlement(PLAN_CATALOG.free, { kind: "video", avatarVideo: true }), { code: "UPGRADE_REQUIRED" });
-  assert.throws(() => assertGenerationEntitlement(PLAN_CATALOG.free, { kind: "video" }), { code: "UPGRADE_REQUIRED" });
+  assert.doesNotThrow(() => assertGenerationEntitlement(PLAN_CATALOG.free, { kind: "video" }));
   assert.doesNotThrow(() => assertGenerationEntitlement(PLAN_CATALOG.free, { kind: "image" }));
 });
 

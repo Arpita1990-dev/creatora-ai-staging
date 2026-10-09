@@ -36,6 +36,7 @@ export default function ConnectMuApiModal({ onClose, onConnected, initialStatus,
         return;
       }
       setApiKey('');
+      window.dispatchEvent(new CustomEvent('creatora:muapi-connection-updated', { detail: { connected: true } }));
       onConnected?.(result);
     } catch {
       setError('Unable to connect MuAPI. Check your API key and try again.');
@@ -48,6 +49,7 @@ export default function ConnectMuApiModal({ onClose, onConnected, initialStatus,
     try {
       const response = await authFetch('/api/integrations/muapi/disconnect', { method: 'POST' });
       if (!response.ok) throw new Error('Unable to disconnect MuAPI.');
+      window.dispatchEvent(new CustomEvent('creatora:muapi-connection-updated', { detail: { connected: false } }));
       onConnected?.({ connected: false });
     } catch {
       // Silently fail

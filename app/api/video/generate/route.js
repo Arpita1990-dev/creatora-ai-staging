@@ -7,7 +7,7 @@ import {
 } from "@/lib/generationJobs";
 import { mediaUrlForWorkspace } from "@/lib/mediaDelivery";
 import { promptFromVoiceBrief } from "@/lib/voiceVideo";
-import { assertGenerationEntitlement, assertProjectCapacity, workspaceEntitlements } from "@/lib/planCatalog";
+import { assertGenerationEntitlement, assertGenerationQuota, assertProjectCapacity, workspaceEntitlements } from "@/lib/planCatalog";
 
 export async function POST(request) {
   try {
@@ -27,7 +27,10 @@ export async function POST(request) {
         }
       : await request.json();
     const entitlement = await workspaceEntitlements(prisma, user.organizationId);
-    assertGenerationEntitlement(entitlement, { kind: body.brief?.outputType === "AUDIO" ? "audio" : "video", avatarVideo: Boolean(body.avatarConfig?.enabled) });
+    const generationKind = body.brief?.outputType === "AUDIO" ? "audio" : "video";
+    const avatarVideo = Boolean(body.avatarConfig?.enabled);
+    assertGenerationEntitlement(entitlement, { kind: generationKind, avatarVideo });
+    await assertGenerationQuota(prisma, entitlement, { organizationId: user.organizationId, kind: generationKind, avatarVideo });
     const brief = body.brief;
     if (!brief?.title || !Array.isArray(brief.scenes) || !brief.scenes.length)
       return NextResponse.json(

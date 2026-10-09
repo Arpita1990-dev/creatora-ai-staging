@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ConnectMuApiModal from './ConnectMuApiModal';
 import { useAuth } from './AuthProvider';
 
@@ -10,6 +10,7 @@ export default function MuApiStatusCard({ authFetch }) {
   const [loading, setLoading] = useState(true);
   const [showConnect, setShowConnect] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const fetchStatusRef = useRef(null);
 
   const fetchStatus = async () => {
     try {
@@ -24,12 +25,16 @@ export default function MuApiStatusCard({ authFetch }) {
       setLoading(false);
     }
   };
+  fetchStatusRef.current = fetchStatus;
 
   useEffect(() => {
     setStatus(null);
     setLoading(true);
     setShowConnect(false);
-    fetchStatus();
+    const refreshStatus = () => { void fetchStatusRef.current?.(); };
+    window.addEventListener('creatora:muapi-connection-updated', refreshStatus);
+    refreshStatus();
+    return () => window.removeEventListener('creatora:muapi-connection-updated', refreshStatus);
   }, [organization?.id]);
 
   const handleRefresh = async () => {
@@ -40,7 +45,6 @@ export default function MuApiStatusCard({ authFetch }) {
 
   const handleConnected = () => {
     setShowConnect(false);
-    fetchStatus();
   };
 
   const handleDisconnect = async () => {
