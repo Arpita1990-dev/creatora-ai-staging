@@ -1,0 +1,860 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/sqlite-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum AccountType {
+  PERSONAL
+  ORGANIZATION
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  EDITOR
+  REVIEWER
+  VIEWER
+  BILLING
+}
+
+enum MemberStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum CreditTransactionType {
+  GRANT
+  PURCHASE
+  RESERVE
+  CHARGE
+  RELEASE
+  REFUND
+  ADJUSTMENT
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+enum AssetStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Asset {
+  id             String  @id @default(cuid())
+  userId         String
+  organizationId String?
+  projectId      String?
+  campaignId     String?
+
+  title     String
+  assetType AssetType
+  status    AssetStatus @default(QUEUED)
+
+  prompt          String?
+  platforms       String  @default("[]")
+  aspectRatio     String?
+  durationSeconds Int?
+
+  provider       String  @default("MUAPI")
+  providerJobId  String? @unique
+  providerStatus String?
+
+  outputUrl    String?
+  thumbnailUrl String?
+  errorMessage String?
+
+  estimatedCredits Int @default(0)
+  chargedCredits   Int @default(0)
+
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([campaignId])
+  @@index([status])
+  @@index([assetType])
+}
+
+model User {
+  id                 String                   @id @default(cuid())
+  email              String                   @unique
+  passwordHash       String
+  firstName          String?
+  lastName           String?
+  avatarUrl          String?
+  accountType        AccountType              @default(PERSONAL)
+  status             UserStatus               @default(PENDING_VERIFICATION)
+  emailVerifiedAt    DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  verificationTokens EmailVerificationToken[]
+  resetTokens        PasswordResetToken[]
+  sessions           RefreshSession[]
+  ownedOrganizations Organization[]           @relation("OrganizationOwner")
+  memberships        OrganizationMember[]     @relation("MembershipUser")
+  auditLogs          AuditLog[]
+  oauthAccounts      OAuthAccount[]
+  billingAccounts    BillingAccount[]
+
+  @@index([status])
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  email             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+}
+
+model RefreshSession {
+  id                  String        @id @default(cuid())
+  userId              String
+  organizationId      String?
+  tokenHash           String        @unique
+  tokenFamily         String
+  userAgent           String?
+  ipAddress           String?
+  expiresAt           DateTime
+  revokedAt           DateTime?
+  replacedBySessionId String?
+  createdAt           DateTime      @default(now())
+  lastUsedAt          DateTime?
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization        Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([userId, tokenFamily])
+  @@index([expiresAt])
+}
+
+model Organization {
+  id              String               @id @default(cuid())
+  name            String
+  slug            String               @unique
+  logoUrl         String?
+  ownerId         String
+  // PERSONAL = the private workspace auto-created for one user (existing
+  // orgs are migrated to this); ORGANIZATION = a real, shareable team.
+  accountType     AccountType          @default(PERSONAL)
+  status          OrganizationStatus   @default(ACTIVE)
+  defaultTimezone String               @default("UTC")
+  defaultLanguage String               @default("en")
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  owner           User                 @relation("OrganizationOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  members         OrganizationMember[]
+  sessions        RefreshSession[]
+  wallet          CreditWallet?
+  subscription    Subscription?
+  billingAccounts BillingAccount[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrganizationRole @default(VIEWER)
+  status         MemberStatus     @default(INVITED)
+  invitedById    String?
+  joinedAt       DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User             @relation("MembershipUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId, status])
+}
+
+model TeamInvitation {
+  id             String           @id @default(cuid())
+  organizationId String
+  email          String
+  role           OrganizationRole @default(VIEWER)
+  tokenHash      String           @unique
+  invitedById    String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@index([organizationId, email])
+}
+
+model Plan {
+  id                   String         @id @default(cuid())
+  code                 String         @unique
+  name                 String
+  accountType          AccountType    @default(PERSONAL)
+  monthlyPrice         Int
+  annualPrice          Int
+  currency             String
+  billingInterval      String
+  razorpayPlanId       String?
+  monthlyCredits       Int
+  maxProjects          Int?
+  maxTeamMembers       Int
+  maxFacebookAccounts  Int            @default(0)
+  maxInstagramAccounts Int            @default(0)
+  maxLinkedInAccounts  Int            @default(0)
+  maxYouTubeAccounts   Int            @default(0)
+  imageGeneration      Boolean        @default(true)
+  imageGenerationLimit Int?
+  videoGeneration      Boolean        @default(false)
+  watermark            Boolean        @default(true)
+  supportLevel         String
+  features             String         @default("[]")
+  active               Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  subscriptions        Subscription[]
+}
+
+model BillingAccount {
+  id             String        @id @default(cuid())
+  type           AccountType
+  userId         String?
+  organizationId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  user           User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  subscription   Subscription?
+
+  @@unique([type, userId])
+  @@unique([type, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  organizationId         String             @unique
+  planId                 String
+  billingAccountId       String?            @unique
+  provider               String?
+  providerCustomerId     String?
+  providerSubscriptionId String?
+  status                 SubscriptionStatus @default(TRIALING)
+  billingCycle           String?
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
+  pendingPlanId          String?
+  pendingChangeType      String?
+  pendingChangeStatus    String?
+  pendingProviderSubscriptionId String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  organization           Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  billingAccount         BillingAccount?    @relation(fields: [billingAccountId], references: [id], onDelete: SetNull)
+  plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+}
+
+model CreditWallet {
+  id                String              @id @default(cuid())
+  organizationId    String              @unique
+  balance           Int                 @default(0)
+  reservedBalance   Int                 @default(0)
+  lifetimePurchased Int                 @default(0)
+  lifetimeUsed      Int                 @default(0)
+  updatedAt         DateTime            @updatedAt
+  organization      Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  transactions      CreditTransaction[]
+}
+
+model CreditTransaction {
+  id             String                @id @default(cuid())
+  walletId       String
+  userId         String?
+  type           CreditTransactionType
+  amount         Int
+  balanceAfter   Int
+  description    String?
+  idempotencyKey String                @unique
+  createdAt      DateTime              @default(now())
+  wallet         CreditWallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String?
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  ipAddress      String?
+  userAgent      String?
+  metadata       String   @default("{}")
+  createdAt      DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+}
+
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum CampaignStatus {
+  DRAFT
+  PLANNING
+  GENERATING
+  REVIEW
+  COMPLETED
+  FAILED
+  ARCHIVED
+}
+
+enum GenerationType {
+  IMAGE
+  VIDEO
+  AUDIO
+  COPY
+}
+
+enum GenerationStatus {
+  QUEUED
+  SUBMITTED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ProviderAttemptStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  TIMED_OUT
+  FALLBACK_STARTED
+}
+
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum WorkflowRunStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum IntegrationProvider {
+  META
+  INSTAGRAM
+  FACEBOOK
+  YOUTUBE
+  GOOGLE_DRIVE
+  DROPBOX
+  OTHER
+}
+
+enum IntegrationStatus {
+  DISCONNECTED
+  CONNECTING
+  CONNECTED
+  ERROR
+  EXPIRED
+}
+
+enum SocialProvider {
+  META
+  LINKEDIN
+  YOUTUBE
+}
+
+enum PublishPlatform {
+  FACEBOOK
+  INSTAGRAM
+  LINKEDIN
+  YOUTUBE
+}
+
+enum PublishStatus {
+  PROCESSING
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+model Project {
+  id                       String        @id @default(cuid())
+  organizationId           String
+  createdById              String
+  name                     String
+  description              String?
+  prompt                   String?
+  configuration            String        @default("{}")
+  inputMethod              String        @default("TEXT")
+  platform                 String?
+  aspectRatio              String?
+  outputType               String        @default("IMAGE")
+  status                   ProjectStatus @default(DRAFT)
+  thumbnailUrl             String?
+  finalVideoUrl            String?
+  finalThumbnailUrl        String?
+  successfulProvider       String?
+  successfulProviderTaskId String?
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  @@index([organizationId, status])
+  @@index([createdById])
+}
+
+model Campaign {
+  id                 String         @id @default(cuid())
+  organizationId     String
+  projectId          String?
+  createdById        String
+  name               String
+  productName        String?
+  productDescription String?
+  targetAudience     String?
+  objective          String?
+  offer              String?
+  platforms          String         @default("[]")
+  budgetMin          Int?
+  budgetMax          Int?
+  strategy           String?
+  contentPlan        String?
+  status             CampaignStatus @default(DRAFT)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  @@index([organizationId, status])
+  @@index([projectId])
+}
+
+model GenerationJob {
+  id               String           @id @default(cuid())
+  organizationId   String
+  userId           String
+  projectId        String?
+  campaignId       String?
+  assetId          String?
+  type             GenerationType
+  status           GenerationStatus @default(QUEUED)
+  provider         String
+  providerModel    String?
+  providerEndpoint String?
+  providerJobId    String?          @unique
+  providerStatus   String?
+  prompt           String?
+  negativePrompt   String?
+  requestPayload   String?
+  responsePayload  String?
+  aspectRatio      String?
+  durationSeconds  Int?
+  progress         Int?
+  errorCode        String?
+  errorMessage     String?
+  estimatedCredits Int              @default(0)
+  chargedCredits   Int              @default(0)
+  retryCount       Int              @default(0)
+  maxRetries       Int              @default(0)
+  fallbackCount    Int              @default(0)
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([campaignId])
+  @@index([providerJobId])
+  @@index([status])
+}
+
+model ProviderAttempt {
+  id              String                @id @default(cuid())
+  projectId       String?
+  campaignId      String?
+  generationJobId String
+  provider        String
+  taskId          String?
+  attemptNumber   Int
+  status          ProviderAttemptStatus @default(QUEUED)
+  failureReason   String?
+  estimatedCost   Float?
+  actualCost      Float?
+  idempotencyKey  String                @unique
+  startedAt       DateTime              @default(now())
+  completedAt     DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([projectId, provider])
+  @@index([campaignId])
+  @@index([generationJobId, status])
+  @@index([taskId])
+}
+
+model VoiceInput {
+  id              String   @id
+  userId          String
+  organizationId  String
+  storageUrl      String
+  transcript      String?
+  language        String?
+  durationSeconds Int?
+  mimeType        String
+  sizeBytes       Int
+  status          String   @default("UPLOADED")
+  errorMessage    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([status])
+}
+
+model VoiceVideoJob {
+  id              String    @id
+  userId          String
+  organizationId  String
+  voiceInputId    String
+  campaignId      String?
+  generationJobId String?   @unique
+  briefJson       String
+  settingsJson    String    @default("{}")
+  provider        String    @default("MUAPI")
+  providerJobId   String?
+  status          String    @default("QUEUED")
+  progress        Int       @default(0)
+  errorMessage    String?
+  outputUrl       String?
+  thumbnailUrl    String?
+  outputType      String    @default("VIDEO")
+  durationSeconds Int
+  aspectRatio     String
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
+  @@index([voiceInputId])
+  @@index([status])
+}
+
+model BrandKit {
+  id                   String   @id @default(cuid())
+  organizationId       String   @unique
+  name                 String
+  description          String?
+  primaryColor         String?
+  secondaryColor       String?
+  accentColor          String?
+  backgroundColor      String?
+  headingFont          String?
+  bodyFont             String?
+  toneOfVoice          String?
+  brandDescription     String?
+  targetAudience       String?
+  bannedWords          String   @default("[]")
+  preferredWords       String   @default("[]")
+  defaultLogoAssetId   String?
+  secondaryLogoAssetId String?
+  primaryLogoName      String?
+  secondaryLogoName    String?
+  website              String?
+  industry             String?
+  buttonStyle          String?
+  imageStyle           String?
+  preferredLanguage    String?
+  complianceRules      String?
+  defaultCallToAction  String?
+  additionalRules      String   @default("{}")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Template {
+  id             String   @id @default(cuid())
+  organizationId String?
+  createdById    String?
+  name           String
+  slug           String   @unique
+  description    String?
+  category       String?
+  industry       String?
+  assetType      String?
+  platform       String?
+  aspectRatio    String?
+  thumbnailUrl   String?
+  previewUrl     String?
+  promptTemplate String?
+  configuration  String   @default("{}")
+  isSystem       Boolean  @default(false)
+  isPublished    Boolean  @default(false)
+  usageCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId, isPublished])
+}
+
+model Workflow {
+  id             String         @id @default(cuid())
+  organizationId String
+  createdById    String
+  name           String
+  description    String?
+  status         WorkflowStatus @default(DRAFT)
+  definition     String         @default("{}")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([organizationId, status])
+}
+
+model WorkflowRun {
+  id             String            @id @default(cuid())
+  workflowId     String
+  organizationId String
+  startedById    String
+  status         WorkflowRunStatus @default(QUEUED)
+  input          String            @default("{}")
+  output         String?
+  errorMessage   String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime          @default(now())
+
+  @@index([workflowId, status])
+  @@index([organizationId])
+}
+
+model IntegrationConnection {
+  id                    String              @id @default(cuid())
+  organizationId        String
+  provider              IntegrationProvider
+  status                IntegrationStatus   @default(DISCONNECTED)
+  accountName           String?
+  externalAccountId     String?
+  encryptedAccessToken  String?
+  encryptedRefreshToken String?
+  tokenExpiresAt        DateTime?
+  scopes                String              @default("[]")
+  metadata              String              @default("{}")
+  connectedById         String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  @@unique([organizationId, provider, externalAccountId])
+  @@index([organizationId, status])
+}
+
+model SocialConnection {
+  id                    String            @id @default(cuid())
+  userId                String?
+  organizationId        String?
+  provider              SocialProvider    @default(META)
+  providerAccountId     String?
+  accountName           String?
+  accessTokenEncrypted  String?
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime?
+  scopes                String            @default("[]")
+  status                IntegrationStatus @default(CONNECTING)
+  connectedBy           String?
+  metadata              String            @default("{}")
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  destinations SocialDestination[]
+
+  @@unique([userId, provider, providerAccountId])
+  @@unique([organizationId, provider, providerAccountId])
+  @@index([userId, provider, status])
+  @@index([organizationId, provider, status])
+}
+
+// One row per publishable external account (Facebook Page, Instagram Business
+// account, LinkedIn member/organization, YouTube channel). The encrypted OAuth
+// token stays on SocialConnection, so several destinations can share one
+// authorization while each keeps its own connection identity and its own
+// disconnect.
+model SocialDestination {
+  id                 String            @id @default(cuid())
+  socialConnectionId String
+  userId             String?
+  organizationId     String?
+  provider           SocialProvider
+  providerAccountId  String
+  accountType        String
+  accountName        String
+  handle             String?
+  thumbnail          String?
+  status             IntegrationStatus @default(CONNECTED)
+  position           Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  connection SocialConnection @relation(fields: [socialConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([socialConnectionId, providerAccountId])
+  @@unique([userId, provider, providerAccountId])
+  @@unique([organizationId, provider, providerAccountId])
+  @@index([userId, provider, status])
+  @@index([organizationId, provider, status])
+}
+
+model ProviderCredential {
+  id                 String    @id @default(cuid())
+  provider           String
+  userId             String?
+  organizationId     String?
+  secretEncrypted    String
+  secretPrefix       String
+  createdBy          String
+  lastBalanceUsd     Float?
+  lastBalanceCredits Int?
+  lastBalanceSyncAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([provider, userId])
+  @@unique([provider, organizationId])
+  @@index([userId, provider])
+  @@index([organizationId, provider])
+}
+
+model PublishJob {
+  id              String          @id @default(cuid())
+  userId          String
+  organizationId  String?
+  assetId         String
+  platform        PublishPlatform
+  connectionId    String?
+  destinationId   String?
+  destinationName String?
+  caption         String?
+  status          PublishStatus   @default(PROCESSING)
+  platformPostId  String?
+  platformPostUrl String?
+  errorMessage    String?
+  createdBy       String
+  createdAt       DateTime        @default(now())
+  publishedAt     DateTime?
+
+  @@index([userId, createdAt])
+  @@index([organizationId, status])
+  @@index([assetId, platform])
+}
+
+model ApiKey {
+  id             String    @id @default(cuid())
+  organizationId String
+  createdById    String
+  name           String
+  keyPrefix      String
+  keyHash        String    @unique
+  scopes         String    @default("[]")
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([organizationId, revokedAt])
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  userId         String
+  organizationId String?
+  type           String
+  title          String
+  message        String
+  readAt         DateTime?
+  metadata       String    @default("{}")
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, readAt])
+}

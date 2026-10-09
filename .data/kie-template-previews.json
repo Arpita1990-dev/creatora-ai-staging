@@ -1,0 +1,550 @@
+{
+  "templates": {
+    "app-tutorial": {
+      "thumbnailUrl": "/template-thumbnails/app-tutorial.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/8f034a2a-58c9-44a7-8b1b-12164c855921-app-tutorial.jpg",
+      "status": "complete",
+      "error": "video is not defined",
+      "failedAt": "2026-09-29T14:15:22.099Z",
+      "taskId": "428e01294e179304b62c1a67cf40d4be",
+      "model": "wan/3-0-video",
+      "submittedAt": "2026-09-29T14:15:48.934Z",
+      "progress": 100,
+      "checkedAt": "2026-09-29T14:17:56.218Z",
+      "bytes": 3725703,
+      "completedAt": "2026-09-29T14:17:59.917Z",
+      "cost": 40
+    },
+    "artisan-perfume-film": {
+      "thumbnailUrl": "/template-thumbnails/artisan-perfume-film.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/febd21a8-b7c3-450a-83dd-b61095142532-artisan-perfume-film.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:18:57.258Z"
+    },
+    "athlete-day-reel": {
+      "thumbnailUrl": "/template-thumbnails/athlete-day-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/71131aba-e967-429a-8c71-96719bd20737-athlete-day-reel.jpg",
+      "taskId": "3eb9aa79b731d93591f79bc83ddc0416",
+      "model": "wan/3-0-video",
+      "status": "complete",
+      "submittedAt": "2026-09-29T14:18:57.241Z",
+      "progress": 100,
+      "checkedAt": "2026-09-29T14:21:16.247Z",
+      "bytes": 3254116,
+      "completedAt": "2026-09-29T14:21:19.976Z",
+      "cost": 40
+    },
+    "baby-care": {
+      "thumbnailUrl": "/template-thumbnails/baby-care.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/016335ef-38d2-4a0d-977b-35ca29d541e3-baby-care.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:18:58.613Z"
+    },
+    "car-showroom-walkthrough": {
+      "thumbnailUrl": "/template-thumbnails/car-showroom-walkthrough.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/b2af3814-0bc4-4891-9884-08d770345db4-car-showroom-walkthrough.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:18:59.205Z"
+    },
+    "charity-impact-story": {
+      "thumbnailUrl": "/template-thumbnails/charity-impact-story.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/c04c69ef-b86e-4be0-8b1c-6826aab7a312-charity-impact-story.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:00.328Z"
+    },
+    "chef-special-reveal": {
+      "thumbnailUrl": "/template-thumbnails/chef-special-reveal.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/c56d7573-2fd3-45e8-a744-9f1c4955acd0-chef-special-reveal.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:03.196Z"
+    },
+    "coastal-hotel-tour": {
+      "thumbnailUrl": "/template-thumbnails/coastal-hotel-tour.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/047076c3-3081-448a-9917-f74c87333e14-coastal-hotel-tour.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:03.183Z"
+    },
+    "coffee-story": {
+      "thumbnailUrl": "/template-thumbnails/coffee-story.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/3f800bc1-af1b-4a98-9411-8bcef521fbe1-coffee-story.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:04.841Z"
+    },
+    "conference-teaser": {
+      "thumbnailUrl": "/template-thumbnails/conference-teaser.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/b8527ad5-f395-4e8a-aa7d-fbecd1f10a9b-conference-teaser.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:06.104Z"
+    },
+    "cosmetics-transformation": {
+      "thumbnailUrl": "/template-thumbnails/cosmetics-transformation.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/4c82bb07-7b9f-4a9d-99e7-74e539874109-cosmetics-transformation.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:06.647Z"
+    },
+    "course-promo": {
+      "thumbnailUrl": "/template-thumbnails/course-promo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/2c846871-0dc9-4f9c-8dc4-529f311dea1b-course-promo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:07.893Z"
+    },
+    "craft-chocolate-story": {
+      "thumbnailUrl": "/template-thumbnails/craft-chocolate-story.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/a107c751-f35c-4c30-810d-935ebc53e527-craft-chocolate-story.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:09.359Z"
+    },
+    "dental-trust": {
+      "thumbnailUrl": "/template-thumbnails/dental-trust.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/a6d8cd34-e760-48b3-b7d1-abe463478b9e-dental-trust.jpg",
+      "status": "failed",
+      "error": "This aspect_ratio is not within the range of allowed options",
+      "failedAt": "2026-09-29T14:19:08.995Z"
+    },
+    "diwali-sale": {
+      "thumbnailUrl": "/template-thumbnails/diwali-sale.png",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/9cd51dff-6866-4819-9c25-45228ab78a7b-diwali-sale.png",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:18.148Z"
+    },
+    "eco-brand": {
+      "thumbnailUrl": "/template-thumbnails/eco-brand.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/cc531904-a4b4-44b7-9ebb-f5f1243a7c78-eco-brand.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:11.980Z"
+    },
+    "eco-packaging-unbox": {
+      "thumbnailUrl": "/template-thumbnails/eco-packaging-unbox.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/9735665c-4edb-42d1-a730-36b2e5ae4fb0-eco-packaging-unbox.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:13.797Z"
+    },
+    "electric-car-reveal": {
+      "thumbnailUrl": "/template-thumbnails/electric-car-reveal.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/e8315848-31d9-48c2-a13a-feb5c8397fd5-electric-car-reveal.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:16.126Z"
+    },
+    "electric-scooter-city": {
+      "thumbnailUrl": "/template-thumbnails/electric-scooter-city.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/c6f417db-9d30-4e3b-92d4-d67ecbaca889-electric-scooter-city.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:18.471Z"
+    },
+    "event-stage-reveal": {
+      "thumbnailUrl": "/template-thumbnails/event-stage-reveal.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/132a4b8a-8ade-45fd-a949-ee9c4279e45e-event-stage-reveal.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:20.634Z"
+    },
+    "fashion-lookbook": {
+      "thumbnailUrl": "/template-thumbnails/fashion-lookbook.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/3b4f2502-272d-4445-89bf-50da40ba26e0-fashion-lookbook.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:20.827Z"
+    },
+    "festival-fashion-reel": {
+      "thumbnailUrl": "/template-thumbnails/festival-fashion-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/ad15a321-b383-4067-a254-b68a40ef4fca-festival-fashion-reel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:23.664Z"
+    },
+    "film-trailer-teaser": {
+      "thumbnailUrl": "/template-thumbnails/film-trailer-teaser.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/83a1dc2d-12b8-44d4-91dd-c8907b177aa2-film-trailer-teaser.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:22.540Z"
+    },
+    "financial-app-demo": {
+      "thumbnailUrl": "/template-thumbnails/financial-app-demo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/8978e7bb-d502-47ac-ae8f-58960c98aa24-financial-app-demo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:24.300Z"
+    },
+    "fintech-app": {
+      "thumbnailUrl": "/template-thumbnails/fintech-app.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/49801e1c-0fa9-4a12-972c-6a1ac827b151-fintech-app.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:25.434Z"
+    },
+    "fitness-launch": {
+      "thumbnailUrl": "/template-thumbnails/fitness-launch.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/6f244dd7-0aa4-4f2f-8399-62877b4fa08e-fitness-launch.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:25.982Z"
+    },
+    "food-delivery-demo": {
+      "thumbnailUrl": "/template-thumbnails/food-delivery-demo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/df1ef68b-7597-43c4-bb86-af9322f616b9-food-delivery-demo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:28.359Z"
+    },
+    "furniture-craft": {
+      "thumbnailUrl": "/template-thumbnails/furniture-craft.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/6f1aee6e-6551-4194-99aa-02ecb56c42cb-furniture-craft.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:28.544Z"
+    },
+    "gadget-unboxing": {
+      "thumbnailUrl": "/template-thumbnails/gadget-unboxing.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/59e58d5e-e57c-4635-94e9-50c4e26bc79e-gadget-unboxing.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:31.046Z"
+    },
+    "game-trailer": {
+      "thumbnailUrl": "/template-thumbnails/game-trailer.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/686f2af8-3fdc-4b44-9178-5e392cc620a5-game-trailer.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:31.113Z"
+    },
+    "gaming-headset-reveal": {
+      "thumbnailUrl": "/template-thumbnails/gaming-headset-reveal.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/42c679b7-2215-4a9f-8473-197a268c32c8-gaming-headset-reveal.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:32.855Z"
+    },
+    "handmade-ceramics": {
+      "thumbnailUrl": "/template-thumbnails/handmade-ceramics.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/a38aa4c4-d8b2-49cb-8221-28d3e9fb3f31-handmade-ceramics.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:33.699Z"
+    },
+    "holiday-gift-guide": {
+      "thumbnailUrl": "/template-thumbnails/holiday-gift-guide.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/7c291760-7b35-4c46-9402-643ee30b9577-holiday-gift-guide.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:34.709Z"
+    },
+    "home-decor": {
+      "thumbnailUrl": "/template-thumbnails/home-decor.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/36b97045-735b-4ebe-bcf9-bc60073f36ff-home-decor.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:37.121Z"
+    },
+    "home-workout-demo": {
+      "thumbnailUrl": "/template-thumbnails/home-workout-demo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/2745966f-aebe-4e86-9c33-2ea01f3a3c3c-home-workout-demo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:37.488Z"
+    },
+    "island-travel": {
+      "thumbnailUrl": "/template-thumbnails/island-travel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/73c6d0aa-4381-4a1d-bc66-544c67735980-island-travel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:38.856Z"
+    },
+    "jewelry-sparkle": {
+      "thumbnailUrl": "/template-thumbnails/jewelry-sparkle.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/c9ee0370-6197-42be-8199-64cbc6137cf6-jewelry-sparkle.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:41.392Z"
+    },
+    "kids-learning-app": {
+      "thumbnailUrl": "/template-thumbnails/kids-learning-app.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/09c7dc57-fe52-44f3-b269-a5a741695fd5-kids-learning-app.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:40.581Z"
+    },
+    "language-app-demo": {
+      "thumbnailUrl": "/template-thumbnails/language-app-demo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/f701e457-3358-4342-ae47-42c3de465706-language-app-demo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:42.238Z"
+    },
+    "luxury-property-reel": {
+      "thumbnailUrl": "/template-thumbnails/luxury-property-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/8ed9e004-c141-4562-a22a-a30d705d93c2-luxury-property-reel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:44.017Z"
+    },
+    "meal-kit": {
+      "thumbnailUrl": "/template-thumbnails/meal-kit.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/fa995efd-2279-44fe-a488-3083914d0710-meal-kit.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:43.967Z"
+    },
+    "meal-kit-demo": {
+      "thumbnailUrl": "/template-thumbnails/meal-kit-demo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/ef81623a-0d15-4b76-9971-e19c06713d68-meal-kit-demo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:45.712Z"
+    },
+    "modern-furniture-tour": {
+      "thumbnailUrl": "/template-thumbnails/modern-furniture-tour.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/c9840562-ac23-44e6-ad24-f019c46b33ac-modern-furniture-tour.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:46.259Z"
+    },
+    "mountain-bike-action": {
+      "thumbnailUrl": "/template-thumbnails/mountain-bike-action.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/72fe6146-8b7d-4885-a7f2-09be56b2ade9-mountain-bike-action.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:47.807Z"
+    },
+    "museum-exhibit-reel": {
+      "thumbnailUrl": "/template-thumbnails/museum-exhibit-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/214a9e6d-4a4f-4424-a3f3-a6e329aab286-museum-exhibit-reel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:47.908Z"
+    },
+    "newsroom-behind-scenes": {
+      "thumbnailUrl": "/template-thumbnails/newsroom-behind-scenes.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/ba10ae79-bc8a-4d53-ab68-9d821862bb5c-newsroom-behind-scenes.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:49.772Z"
+    },
+    "nonprofit-story": {
+      "thumbnailUrl": "/template-thumbnails/nonprofit-story.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/23560893-27a8-4836-8121-a85457437dd7-nonprofit-story.jpg",
+      "status": "failed",
+      "error": "This aspect_ratio is not within the range of allowed options",
+      "failedAt": "2026-09-29T14:19:49.001Z"
+    },
+    "organic-tea-ritual": {
+      "thumbnailUrl": "/template-thumbnails/organic-tea-ritual.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/91b55bac-61e6-4365-bc47-07f6c55eaf31-organic-tea-ritual.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:50.651Z"
+    },
+    "pet-adoption-story": {
+      "thumbnailUrl": "/template-thumbnails/pet-adoption-story.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/22d3101b-7457-493e-b3d3-e238765b7c97-pet-adoption-story.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:52.259Z"
+    },
+    "pet-care-demo": {
+      "thumbnailUrl": "/template-thumbnails/pet-care-demo.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/42b58e1f-7822-4c6e-b98b-ed31a0a7d2bb-pet-care-demo.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:54.300Z"
+    },
+    "plant-care-guide": {
+      "thumbnailUrl": "/template-thumbnails/plant-care-guide.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/84c52322-2905-445c-9850-e78fd6f9a434-plant-care-guide.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:53.962Z"
+    },
+    "product-feature-spotlight": {
+      "thumbnailUrl": "/template-thumbnails/product-feature-spotlight.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/9251f428-c221-4244-8c89-e48803173a0c-product-feature-spotlight.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:55.832Z"
+    },
+    "real-estate": {
+      "thumbnailUrl": "/template-thumbnails/real-estate.png",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/73ab164a-ff17-4ee7-be94-9a06a970363a-real-estate.png",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:56.837Z"
+    },
+    "recruitment-film": {
+      "thumbnailUrl": "/template-thumbnails/recruitment-film.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/8cd88673-6fb9-4ef6-bd41-69e9101086be-recruitment-film.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:57.881Z"
+    },
+    "restaurant-promo": {
+      "thumbnailUrl": "/template-thumbnails/restaurant-promo.png",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/04928db1-0ff2-4171-92bc-0eecd4556f32-restaurant-promo.png",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:59.218Z"
+    },
+    "retail-window-showcase": {
+      "thumbnailUrl": "/template-thumbnails/retail-window-showcase.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/574768e4-609b-4918-afae-c3c1535f2828-retail-window-showcase.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:19:59.555Z"
+    },
+    "running-shoe": {
+      "thumbnailUrl": "/template-thumbnails/running-shoe.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/2a4195a4-ddbd-4add-9354-1308013f00ab-running-shoe.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:00.960Z"
+    },
+    "runway-highlight-reel": {
+      "thumbnailUrl": "/template-thumbnails/runway-highlight-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/db52f9cf-f3ad-417b-9bee-1695ccd680da-runway-highlight-reel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:01.401Z"
+    },
+    "saas-dashboard-tour": {
+      "thumbnailUrl": "/template-thumbnails/saas-dashboard-tour.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/ca5e12e0-c771-471d-b440-98eb978fe26c-saas-dashboard-tour.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:02.728Z"
+    },
+    "saas-explainer": {
+      "thumbnailUrl": "/template-thumbnails/saas-explainer.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/318024f1-1f05-4fdb-aa79-808afc7cd7c4-saas-explainer.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:03.248Z"
+    },
+    "skincare-lab-tour": {
+      "thumbnailUrl": "/template-thumbnails/skincare-lab-tour.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/9a219a3a-5f5a-461f-bbf4-9ae15769ee31-skincare-lab-tour.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:04.451Z"
+    },
+    "skincare-routine-reel": {
+      "thumbnailUrl": "/template-thumbnails/skincare-routine-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/01d32652-2ba3-4b34-8c09-bdc16adc1bb4-skincare-routine-reel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:05.062Z"
+    },
+    "smartwatch-training": {
+      "thumbnailUrl": "/template-thumbnails/smartwatch-training.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/05a8a4a7-45d4-41e0-8300-e71aec67505a-smartwatch-training.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:06.179Z"
+    },
+    "solar-home": {
+      "thumbnailUrl": "/template-thumbnails/solar-home.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/53a61543-68e1-42c2-a84a-5ec35f49e8b3-solar-home.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:07.012Z"
+    },
+    "solar-home-story": {
+      "thumbnailUrl": "/template-thumbnails/solar-home-story.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/0c5c2511-eb9d-4d6e-a7bc-d6148a3f2daa-solar-home-story.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:07.903Z"
+    },
+    "spa-treatment-tour": {
+      "thumbnailUrl": "/template-thumbnails/spa-treatment-tour.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/0cb1f20e-b565-4249-8497-09727c5744dc-spa-treatment-tour.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:08.704Z"
+    },
+    "storybook-animation": {
+      "thumbnailUrl": "/template-thumbnails/storybook-animation.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/226c5c0c-6188-4cd3-8b53-18394b0cf334-storybook-animation.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:09.825Z"
+    },
+    "streetwear-drop": {
+      "thumbnailUrl": "/template-thumbnails/streetwear-drop.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/e23ee518-4573-455a-b7b3-8aac7df0089b-streetwear-drop.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:10.567Z"
+    },
+    "tech-event-recap": {
+      "thumbnailUrl": "/template-thumbnails/tech-event-recap.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/c035727f-db2e-43d2-b224-08d4763b638d-tech-event-recap.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:11.476Z"
+    },
+    "travel-itinerary-reel": {
+      "thumbnailUrl": "/template-thumbnails/travel-itinerary-reel.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/65fc3253-375f-4530-a62a-e93268771d83-travel-itinerary-reel.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:12.497Z"
+    },
+    "ugc-review": {
+      "thumbnailUrl": "/template-thumbnails/ugc-review.png",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/d2649da5-1e20-409b-914a-6965a214d669-ugc-review.png",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:14.136Z"
+    },
+    "wedding-venue": {
+      "thumbnailUrl": "/template-thumbnails/wedding-venue.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/84e27a44-0175-4018-89dd-29a475334d5f-wedding-venue.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:14.406Z"
+    },
+    "wedding-venue-film": {
+      "thumbnailUrl": "/template-thumbnails/wedding-venue-film.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/1ff6101f-b20d-46c9-b0ac-fa25b26c573c-wedding-venue-film.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:15.939Z"
+    },
+    "wildlife-mini-documentary": {
+      "thumbnailUrl": "/template-thumbnails/wildlife-mini-documentary.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/14e65e94-cad7-472a-9c6f-a56fdb132e75-wildlife-mini-documentary.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:16.384Z"
+    },
+    "yoga-retreat": {
+      "thumbnailUrl": "/template-thumbnails/yoga-retreat.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/d3fc870d-9282-4bd4-aeb0-53d00c52caa7-yoga-retreat.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:17.757Z"
+    },
+    "yoga-retreat-invite": {
+      "thumbnailUrl": "/template-thumbnails/yoga-retreat-invite.jpg",
+      "referenceUrl": "https://tempfile.redpandaai.co/kieai/12011690/creatora/references/2198ac63-4a86-4113-adec-3143bd4e83eb-yoga-retreat-invite.jpg",
+      "status": "failed",
+      "error": "Credits insufficient : Your current balance isn’t enough to run this request. Please top up to continue.",
+      "failedAt": "2026-09-29T14:20:18.197Z"
+    }
+  }
+}

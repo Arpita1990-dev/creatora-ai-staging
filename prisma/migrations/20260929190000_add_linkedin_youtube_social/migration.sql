@@ -1,0 +1,4 @@
+ALTER TABLE "Plan" ADD COLUMN "maxLinkedInAccounts" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Plan" ADD COLUMN "maxYouTubeAccounts" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "SocialConnection" ADD COLUMN "refreshTokenEncrypted" TEXT;
+ALTER TABLE "SocialConnection" ADD COLUMN "scopes" TEXT NOT NULL DEFAULT '[]';

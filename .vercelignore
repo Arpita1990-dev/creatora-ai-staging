@@ -1,0 +1,21 @@
+.next
+node_modules
+
+# Local-development and rollback data. Production media is in Supabase Storage.
+uploads
+.data
+backups
+
+# Non-runtime migration, test, and documentation inputs.
+docs
+tests
+scripts
+prisma/*.db
+prisma/*.db-*
+prisma/migrations
+prisma/postgresql-migrations
+
+# Desktop-only build outputs.
+build
+release
+.webpack

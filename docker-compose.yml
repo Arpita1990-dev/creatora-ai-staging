@@ -1,0 +1,70 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis-data:/data
+
+  open-generative-ai:
+    build: .
+    container_name: open-generative-ai
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env.local
+    environment: &app-environment
+      NODE_ENV: production
+      DATABASE_URL: file:/data/creatora.db
+      REDIS_URL: redis://redis:6379
+      APP_URL: ${APP_URL:-http://localhost:3001}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-creatora-local-docker-secret-change-before-production}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+      PRIMARY_VIDEO_PROVIDER: ${PRIMARY_VIDEO_PROVIDER:-muapi}
+      KIE_VIDEO_MODEL: ${KIE_VIDEO_MODEL:-wan/3-0-video}
+      KIE_IMAGE_MODEL: ${KIE_IMAGE_MODEL:-qwen3/text-to-image}
+      KIE_IMAGE_REFERENCE_MODEL: ${KIE_IMAGE_REFERENCE_MODEL:-qwen3/image-to-image}
+      MUAPI_VIDEO_MODEL: ${MUAPI_VIDEO_MODEL:-}
+      PROVIDER_MAX_RETRIES: ${PROVIDER_MAX_RETRIES:-1}
+      PROVIDER_TIMEOUT_MS: ${PROVIDER_TIMEOUT_MS:-120000}
+      PROVIDER_SUBMISSION_TIMEOUT_MS: ${PROVIDER_SUBMISSION_TIMEOUT_MS:-120000}
+      PROVIDER_TASK_TIMEOUT_MS: ${PROVIDER_TASK_TIMEOUT_MS:-900000}
+      FALLBACK_ENABLED: ${FALLBACK_ENABLED:-true}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+    volumes:
+      - app-data:/data
+      - generated-media:/app/uploads
+
+  generation-worker:
+    build: .
+    command: ["node", "scripts/campaign-worker.js"]
+    env_file:
+      - .env.local
+    environment: *app-environment
+    depends_on:
+      redis:
+        condition: service_healthy
+      open-generative-ai:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - app-data:/data
+      - generated-media:/app/uploads
+
+volumes:
+  redis-data:
+  app-data:
+  generated-media:

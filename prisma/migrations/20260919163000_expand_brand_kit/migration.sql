@@ -1,0 +1,10 @@
+ALTER TABLE "BrandKit" ADD COLUMN "primaryLogoName" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "secondaryLogoName" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "website" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "industry" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "buttonStyle" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "imageStyle" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "preferredLanguage" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "complianceRules" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "defaultCallToAction" TEXT;
+ALTER TABLE "BrandKit" ADD COLUMN "additionalRules" TEXT NOT NULL DEFAULT '{}';
