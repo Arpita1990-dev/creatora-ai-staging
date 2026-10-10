@@ -3,7 +3,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import { prisma } from '@/lib/prisma';
 import { requireOrganization } from '@/lib/auth';
 import { mediaUrlForWorkspace } from '@/lib/mediaDelivery';
-import { assertProjectCapacity, lockWorkspaceQuota, workspaceEntitlements } from '@/lib/planCatalog';
+import { assertProjectCapacity, lockWorkspaceQuota, projectCapacityWhere, workspaceEntitlements } from '@/lib/planCatalog';
 import { collapseProjectsByCategory, projectCategoryKey, projectStatusHistory, projectStatusKey, uniqueProjectAssets } from '@/lib/projectCategories';
 import { permanentlyDeleteProjects } from '@/lib/permanentDeletion';
 
@@ -103,6 +103,7 @@ export async function POST(request, { params }) {
     if (['VIEWER', 'REVIEWER'].includes(membership.role)) return json({ error: 'Insufficient permission.' }, 403);
     if (resource === 'projects') {
       const requestedName = String(body.name || 'Untitled project').trim().replace(/\s+/g, ' ').slice(0, 200) || 'Untitled project';
+      const entitlement = await workspaceEntitlements(prisma, organizationId);
       const projectData = {
         organizationId, createdById: user.sub, name: requestedName,
         description: body.description || null, prompt: body.prompt || null,
@@ -120,16 +121,15 @@ export async function POST(request, { params }) {
       };
       const result = await prisma.$transaction(async (tx) => {
         await lockWorkspaceQuota(tx, organizationId);
-        const activeProjects = await tx.project.findMany({ where: { organizationId, status: { not: 'ARCHIVED' } }, orderBy: { updatedAt: 'desc' } });
+        const activeProjects = await tx.project.findMany({ where: projectCapacityWhere(organizationId), orderBy: { updatedAt: 'desc' } });
         const reusable = activeProjects.find((project) =>
           projectCategoryKey(project.name) === projectCategoryKey(requestedName)
           && ['NOT_STARTED', 'IN_PROGRESS', 'DRAFT', 'ACTIVE'].includes(project.status)
         );
         if (reusable) return { project: await tx.project.update({ where: { id: reusable.id }, data: reusableData }), reused: true };
-        const entitlement = await workspaceEntitlements(tx, organizationId);
         assertProjectCapacity(entitlement, activeProjects.length);
         return { project: await tx.project.create({ data: projectData }), reused: false };
-      });
+      }, { maxWait: 10_000, timeout: 20_000 });
       return json({ data: publicProject(result.project), reused: result.reused }, result.reused ? 200 : 201);
     }
     if (resource === 'api-keys') {

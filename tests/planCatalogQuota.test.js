@@ -6,6 +6,7 @@ import {
   assertProjectCapacity,
   createProjectWithCapacity,
   planDefinition,
+  projectCapacityWhere,
   reserveGenerationUsage,
 } from '../lib/planCatalog.js';
 import { muApiGenerationKind } from '../lib/muapiGenerationKind.js';
@@ -80,10 +81,42 @@ test('project creation locks the workspace and rejects the third active project'
       create: async () => { created = true; },
     },
   };
-  const database = { $transaction: (operation) => operation(transaction) };
+  const database = {
+    organization: { findUnique: async () => ({ id: 'personal-workspace', subscription: null }) },
+    $transaction: (operation, options) => {
+      assert.equal(options.maxWait, 10_000);
+      assert.equal(options.timeout, 20_000);
+      return operation(transaction);
+    },
+  };
   await assert.rejects(createProjectWithCapacity(database, 'personal-workspace', { name: 'Third' }), (error) => error.code === 'PROJECT_LIMIT_REACHED');
   assert.equal(locked, true);
   assert.equal(created, false);
+});
+
+test('failed and archived projects do not consume project capacity', async () => {
+  let countQuery;
+  let created = false;
+  const transaction = {
+    $queryRaw: async () => {},
+    organization: { findUnique: async () => ({ id: 'personal-workspace', subscription: null }) },
+    project: {
+      count: async ({ where }) => { countQuery = where; return 1; },
+      create: async () => { created = true; return { id: 'project-new' }; },
+    },
+  };
+  const database = {
+    organization: { findUnique: async () => ({ id: 'personal-workspace', subscription: null }) },
+    $transaction: (operation, options) => {
+      assert.equal(options.maxWait, 10_000);
+      assert.equal(options.timeout, 20_000);
+      return operation(transaction);
+    },
+  };
+  await createProjectWithCapacity(database, 'personal-workspace', { name: 'Replacement' });
+  assert.deepEqual(countQuery, projectCapacityWhere('personal-workspace'));
+  assert.deepEqual(countQuery.status.notIn, ['ARCHIVED', 'FAILED']);
+  assert.equal(created, true);
 });
 
 test('MuAPI generation type is derived from known endpoints, not an arbitrary client label', () => {
