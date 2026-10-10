@@ -31,9 +31,10 @@ export async function POST(request) {
       scenes: beats.map((visualPrompt, index) => ({ duration: sceneDuration, visualPrompt, voiceover: index === 0 ? script?.voiceover || plan.messagingAngle : '' })),
       cta: plan.adCopy?.[0]?.callToAction || script?.callToAction || brief.offer,
     };
-    const campaign = await saveCampaign({ id: makeCampaignId(), userId: user.userId, workspaceId: user.workspaceId, brief, plan: structuredPlan, source, status: 'strategy_ready', approvals: { strategy: true, content: true, assets: true }, createdAt: new Date().toISOString() });
+    const campaign = await saveCampaign({ id: makeCampaignId(), userId: user.userId, workspaceId: user.workspaceId, projectId: body.projectId || null, brief, plan: structuredPlan, source, status: 'strategy_ready', approvals: { strategy: true, content: true, assets: true }, createdAt: new Date().toISOString() });
     return campaignJson({ campaign }, { status: 201 });
   } catch (error) {
-    return campaignJson({ error: error.message || 'Campaign creation failed.' }, { status: 500 });
+    const status = error.code === 'PROJECT_LIMIT_REACHED' ? 403 : error.message === 'Project not found.' ? 404 : 500;
+    return campaignJson({ error: error.message || 'Campaign creation failed.', ...(error.code ? { code: error.code } : {}), ...(error.limit != null ? { limit: error.limit, used: error.used } : {}) }, { status });
   }
 }

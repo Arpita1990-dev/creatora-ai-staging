@@ -141,6 +141,7 @@ export default function SocialConnectionCard({ provider, authFetch, notify }) {
       const response = await authFetch(`/api/social/connections/${target.id}`, { method: "DELETE" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || `Unable to disconnect ${target.label}.`);
+      window.dispatchEvent(new Event("creatora:social-connections-updated"));
       notify(`${target.label} disconnected.`);
       setConfirmDisconnect(null);
       await load();

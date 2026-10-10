@@ -144,8 +144,8 @@ export async function getCampaign(id, workspaceId) {
 
 export async function saveCampaign(campaign) {
   const next = { ...campaign, updatedAt: new Date().toISOString() };
-  await persistCampaign(next);
-  return next;
+  const projectId = await persistCampaign(next);
+  return { ...next, projectId };
 }
 
 export async function getCampaignJobs(campaignId) {
@@ -565,7 +565,12 @@ function campaignStatus(status) {
 export async function persistCampaign(campaign) {
   const content = JSON.stringify({ brief: campaign.brief, plan: campaign.plan, source: campaign.source, approvals: campaign.approvals, localStatus: campaign.status, estimatedCredits: campaign.estimatedCredits, workspaceId: campaign.workspaceId, userId: campaign.userId, approvedAt: campaign.approvedAt });
   const existing = await prisma.campaign.findUnique({ where: { id: campaign.id }, select: { projectId: true } });
-  let projectId = existing?.projectId;
+  let projectId = campaign.projectId || existing?.projectId;
+  if (projectId) {
+    const project = await prisma.project.findFirst({ where: { id: projectId, organizationId: campaign.workspaceId }, select: { id: true } });
+    if (!project) throw new Error('Project not found.');
+    projectId = project.id;
+  }
   if (!projectId) {
     const project = await createProjectWithCapacity(prisma, campaign.workspaceId, {
         id: `campaign_project_${crypto.randomUUID()}`,
@@ -587,6 +592,7 @@ export async function persistCampaign(campaign) {
     create: { id: campaign.id, organizationId: campaign.workspaceId, projectId, createdById: campaign.userId, name: campaign.plan?.campaignName || campaign.brief?.product || 'Untitled campaign', productName: campaign.brief?.product || null, productDescription: campaign.brief?.description || null, targetAudience: campaign.brief?.audience || null, objective: campaign.brief?.objective || null, offer: campaign.brief?.offer || null, platforms: JSON.stringify(String(campaign.brief?.platforms || '').split(',').map((item) => item.trim()).filter(Boolean)), contentPlan: content, status: campaignStatus(campaign.status) },
     update: { projectId, name: campaign.plan?.campaignName || campaign.brief?.product || 'Untitled campaign', productName: campaign.brief?.product || null, productDescription: campaign.brief?.description || null, targetAudience: campaign.brief?.audience || null, objective: campaign.brief?.objective || null, offer: campaign.brief?.offer || null, contentPlan: content, status: campaignStatus(campaign.status) },
   });
+  return projectId;
 }
 
 export async function persistGenerationJob(job) {

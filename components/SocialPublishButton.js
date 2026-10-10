@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 export function SocialPlatformIcon({ platform }) {
   if (platform === "FACEBOOK") return <svg className="social-publish-icon facebook" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" /><path d="M13.6 20v-7h2.35l.35-2.73h-2.7V8.53c0-.79.22-1.33 1.36-1.33h1.45V4.76c-.25-.03-1.11-.11-2.11-.11-2.09 0-3.52 1.28-3.52 3.62v2H8.42V13h2.36v7h2.82Z" /></svg>;
   if (platform === "INSTAGRAM") return <svg className="social-publish-icon instagram" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4.1" /><circle className="instagram-dot" cx="17.4" cy="6.8" r="1" /></svg>;
@@ -29,6 +29,32 @@ const PLATFORM_JOB_LABEL = {
   PROCESSING: "Publishing...",
 };
 
+const destinationCache = new Map();
+const destinationRequests = new Map();
+const DESTINATION_CACHE_MS = 15_000;
+
+async function loadWorkspaceDestinations(authFetch, { refresh = false } = {}) {
+  const workspaceKey = authFetch.balanceScopeKey || "active-workspace";
+  const cached = destinationCache.get(workspaceKey);
+  if (!refresh && cached && Date.now() - cached.loadedAt < DESTINATION_CACHE_MS) return cached.rows;
+  const activeRequest = destinationRequests.get(workspaceKey);
+  if (activeRequest) return activeRequest;
+  const request = (async () => {
+    const response = await authFetch("/api/social/connections", { cache: "no-store" });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Unable to load connected accounts.");
+    const rows = result.destinations || [];
+    destinationCache.set(workspaceKey, { rows, loadedAt: Date.now() });
+    return rows;
+  })();
+  destinationRequests.set(workspaceKey, request);
+  try {
+    return await request;
+  } finally {
+    if (destinationRequests.get(workspaceKey) === request) destinationRequests.delete(workspaceKey);
+  }
+}
+
 export default function SocialPublishButton({ asset, authFetch, notify }) {
   const [open, setOpen] = useState(false);
   const [caption, setCaption] = useState(asset.caption || asset.prompt || "");
@@ -40,10 +66,46 @@ export default function SocialPublishButton({ asset, authFetch, notify }) {
   const [loading, setLoading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [jobs, setJobs] = useState([]);
+  const [connectionState, setConnectionState] = useState("loading");
   const assetId = asset.assetId || asset.id;
   const assetType = asset.type || asset.assetType;
   const canPublish = assetId && asset.outputUrl && supportsPublishing(assetType);
   const isVideo = ["Video", "video", "VIDEO"].includes(assetType);
+  const connectedPlatforms = new Set(destinations.filter((destination) => destination.status === "CONNECTED" && !destination.overLimit).map((destination) => destination.platform));
+
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () => {
+      setConnectionState("loading");
+      loadWorkspaceDestinations(authFetch, { refresh: true })
+        .then((rows) => {
+          if (cancelled) return;
+          setDestinations(rows);
+          setConnectionState("ready");
+        })
+        .catch(() => {
+          if (!cancelled) setConnectionState("error");
+        });
+    };
+    const load = () => {
+      setConnectionState("loading");
+      loadWorkspaceDestinations(authFetch)
+        .then((rows) => {
+          if (cancelled) return;
+          setDestinations(rows);
+          setConnectionState("ready");
+        })
+        .catch(() => {
+          if (!cancelled) setConnectionState("error");
+        });
+    };
+    load();
+    window.addEventListener("creatora:social-connections-updated", refresh);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("creatora:social-connections-updated", refresh);
+    };
+  }, [authFetch]);
 
   // YouTube only accepts videos through the existing upload flow, so an image
   // disables those destinations instead of failing at publish time.
@@ -55,15 +117,14 @@ export default function SocialPublishButton({ asset, authFetch, notify }) {
 
   const openPublisher = async (preferredPlatform) => {
     if (!canPublish) return notify("Generate an image or video before publishing.");
+    if (connectionState !== "ready" || !connectedPlatforms.has(preferredPlatform)) return;
     setOpen(true);
     setJobs([]);
     setLoading(true);
     try {
-      const response = await authFetch("/api/social/connections", { cache: "no-store" });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Unable to load connected accounts.");
-      const rows = result.destinations || [];
+      const rows = await loadWorkspaceDestinations(authFetch, { refresh: true });
       setDestinations(rows);
+      setConnectionState("ready");
       setSelected(Object.fromEntries(rows.map((destination) => {
         const blocked = blockedReason(destination);
         if (blocked) return [destination.id, false];
@@ -71,6 +132,7 @@ export default function SocialPublishButton({ asset, authFetch, notify }) {
         return [destination.id, eligible];
       })));
     } catch (error) {
+      setConnectionState("error");
       notify(error.message);
     } finally {
       setLoading(false);
@@ -109,10 +171,27 @@ export default function SocialPublishButton({ asset, authFetch, notify }) {
     <div className="social-publish-actions">
       <span>Publish to social media</span>
       <div className="social-publish-triggers" aria-label="Publish generated asset">
-        {PLATFORMS.map(([platform, label]) => <button key={platform} type="button" className={`social-publish-trigger ${platform.toLowerCase()}`} disabled={!canPublish || (platform === "YOUTUBE" && !isVideo)} aria-label={`Publish to ${label}`} title={canPublish ? `Publish to ${label}` : "Generate an image or video first"} onClick={() => openPublisher(platform)}><SocialPlatformIcon platform={platform} /></button>)}
+        {PLATFORMS.map(([platform, label]) => {
+          const unavailable = connectionState !== "ready" || !connectedPlatforms.has(platform);
+          const mediaBlocked = platform === "YOUTUBE" && !isVideo;
+          const title = !canPublish
+            ? "Generate an image or video first"
+            : mediaBlocked
+              ? "YouTube needs a video asset"
+              : connectionState === "loading"
+                ? "Checking connected accounts"
+                : connectionState === "error"
+                  ? "Unable to verify social connections"
+                  : !connectedPlatforms.has(platform)
+                    ? `Connect an eligible ${label} account in Settings`
+                    : `Publish to ${label}`;
+          return <button key={platform} type="button" className={`social-publish-trigger ${platform.toLowerCase()}`} disabled={!canPublish || mediaBlocked || unavailable} aria-label={`Publish to ${label}`} title={title} onClick={() => openPublisher(platform)}><SocialPlatformIcon platform={platform} /></button>;
+        })}
       </div>
     </div>
     {!canPublish && <small className="social-publish-hint">Generate an image or video to enable publishing.</small>}
+    {canPublish && connectionState === "ready" && !connectedPlatforms.size && <small className="social-publish-hint">Connect a social account in <Link href="/dashboard/settings">Settings</Link> to enable publishing.</small>}
+    {canPublish && connectionState === "error" && <small className="social-publish-hint">Unable to check connected social accounts.</small>}
     {open && <div className="asset-dialog-backdrop" onClick={() => setOpen(false)}><section className="settings-card asset-dialog publish-dialog" onClick={(event) => event.stopPropagation()}>
       <div className="campaign-output-head"><div><span>Publish Content</span><h3>Publish to</h3></div><button type="button" onClick={() => setOpen(false)}>×</button></div>
       <div className="publish-dialog-body">

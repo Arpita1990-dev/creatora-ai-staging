@@ -18,6 +18,7 @@ export async function POST(request) {
     const body = form
       ? {
           voiceInputId: form.get("voiceInputId"),
+          projectId: form.get("projectId"),
           brief: JSON.parse(String(form.get("brief") || "{}")),
           duration: form.get("duration"),
           format: form.get("format"),
@@ -63,20 +64,23 @@ export async function POST(request) {
       { ...brief, duration },
       body.settings || {},
     );
-    const project = await createProjectWithCapacity(prisma, user.organizationId, {
-        id: `voice_project_${crypto.randomUUID()}`,
-        organizationId: user.organizationId,
-        createdById: user.sub,
-        name: brief.title,
-        description: voiceInput.transcript,
-        prompt,
-        configuration: JSON.stringify({ source: "VOICE_TO_VIDEO", voiceInputId: voiceInput.id, avatar: body.avatarConfig?.enabled ? body.avatarConfig : null }),
-        inputMethod: "VOICE",
-        platform: brief.platform,
-        aspectRatio: brief.aspectRatio,
-        outputType,
-        status: "IN_PROGRESS",
-      });
+    const project = body.projectId
+      ? await prisma.project.findFirst({ where: { id: String(body.projectId), organizationId: user.organizationId } })
+      : await createProjectWithCapacity(prisma, user.organizationId, {
+          id: `voice_project_${crypto.randomUUID()}`,
+          organizationId: user.organizationId,
+          createdById: user.sub,
+          name: brief.title,
+          description: voiceInput.transcript,
+          prompt,
+          configuration: JSON.stringify({ source: "VOICE_TO_VIDEO", voiceInputId: voiceInput.id, avatar: body.avatarConfig?.enabled ? body.avatarConfig : null }),
+          inputMethod: "VOICE",
+          platform: brief.platform,
+          aspectRatio: brief.aspectRatio,
+          outputType,
+          status: "IN_PROGRESS",
+        });
+    if (!project) return NextResponse.json({ error: "Project not found." }, { status: 404 });
     const campaign = await prisma.campaign.create({
       data: {
         id: `voice_campaign_${crypto.randomUUID()}`,
@@ -153,6 +157,7 @@ export async function POST(request) {
       { status: 201 },
     );
   } catch (error) {
+    if (error.code === "PROJECT_LIMIT_REACHED") return NextResponse.json({ error: error.message, code: error.code, limit: error.limit, used: error.used }, { status: 403 });
     if (error.code === "UPGRADE_REQUIRED") return NextResponse.json({ error: error.message, code: error.code }, { status: 403 });
     if (error.code === "GENERATION_LIMIT_REACHED" || error.code === "PROJECT_LIMIT_REACHED") return NextResponse.json({ error: error.message, code: error.code, generationType: error.generationType, limit: error.limit, used: error.used }, { status: 403 });
     const status = /Authentication|Organization/.test(error.message)

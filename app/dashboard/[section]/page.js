@@ -390,6 +390,9 @@ function VoiceVideoStudio() {
   const [aspectRatio, setAspectRatio] = useState("9:16");
   const [outputPreference, setOutputPreference] = useState("AUTO");
   const [voiceInputId, setVoiceInputId] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState("");
+  const [projectsLoading, setProjectsLoading] = useState(true);
   const [transcript, setTranscript] = useState("");
   const [brief, setBrief] = useState(null);
   const [settings, setSettings] = useState({
@@ -421,6 +424,22 @@ function VoiceVideoStudio() {
   const [videoUrl, setVideoUrl] = useState("");
   const [generatedAsset, setGeneratedAsset] = useState(null);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    authFetch("/api/workspace/projects?limit=100", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Unable to load projects.");
+        const available = (result.data || []).filter((project) => !["ARCHIVED", "FAILED"].includes(project.status));
+        if (cancelled) return;
+        setProjects(available);
+        setProjectId((current) => available.some((project) => project.id === current) ? current : available[0]?.id || "");
+      })
+      .catch((reason) => { if (!cancelled) setError(reason.message); })
+      .finally(() => { if (!cancelled) setProjectsLoading(false); });
+    return () => { cancelled = true; };
+  }, [authFetch]);
 
   useEffect(() => {
     if (recordingState !== "recording") return undefined;
@@ -607,6 +626,7 @@ function VoiceVideoStudio() {
       body.append("brief", JSON.stringify(approvedBrief));
       body.append("duration", String(duration));
       body.append("format", aspectRatio);
+      body.append("projectId", projectId);
       body.append("settings", JSON.stringify(settings));
       if (avatarMode === "avatar") {
         let avatarFileForGeneration = avatarFile;
@@ -859,6 +879,14 @@ function VoiceVideoStudio() {
               </select>
             </label>
           </div>
+          <label>
+            Save {brief?.outputType === "AUDIO" ? "audio" : "video"} to
+            <select value={projectId} disabled={projectsLoading} onChange={(event) => setProjectId(event.target.value)}>
+              <option value="">Create a new project</option>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+            <small>{projectId ? "The generated media will be added to this project." : "A new project will be created for this media."}</small>
+          </label>
           {(brief?.outputType || outputPreference) !== "AUDIO" && (
             <label>
               Video format
@@ -1177,7 +1205,7 @@ function VoiceVideoStudio() {
               <button
                 className="button generate"
                 type="button"
-                disabled={runLock.current || (avatarMode === "avatar" && !avatarConsent)}
+                disabled={runLock.current || projectsLoading || (avatarMode === "avatar" && !avatarConsent)}
                 onClick={generateVideo}
               >
                 Generate {duration}s{" "}
@@ -1410,6 +1438,9 @@ export default function WorkspacePage() {
   const [generating, setGenerating] = useState(false);
   const [videoDuration, setVideoDuration] = useState(5);
   const [projectName, setProjectName] = useState("");
+  const [videoProjects, setVideoProjects] = useState([]);
+  const [videoProjectId, setVideoProjectId] = useState("");
+  const [videoProjectsLoading, setVideoProjectsLoading] = useState(false);
   const [outputType, setOutputType] = useState("IMAGE");
   const [inputMode, setInputMode] = useState("text");
   const [campaignAudience, setCampaignAudience] = useState("");
@@ -1445,6 +1476,24 @@ export default function WorkspacePage() {
   const generationInFlight = useRef(false);
   const [title, subtitle] = details[section] || details.create;
   const activeFormat = formats[format];
+
+  useEffect(() => {
+    if (!(["image", "video"].includes(section))) return;
+    let cancelled = false;
+    setVideoProjectsLoading(true);
+    authFetch("/api/workspace/projects?limit=100", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Unable to load projects.");
+        const activeProjects = (result.data || []).filter((project) => !["ARCHIVED", "FAILED"].includes(project.status));
+        if (cancelled) return;
+        setVideoProjects(activeProjects);
+        setVideoProjectId((current) => activeProjects.some((project) => project.id === current) ? current : activeProjects[0]?.id || "");
+      })
+      .catch((error) => { if (!cancelled) setNotice(error.message); })
+      .finally(() => { if (!cancelled) setVideoProjectsLoading(false); });
+    return () => { cancelled = true; };
+  }, [authFetch, section]);
 
   useEffect(() => {
     if (!isOrganizationWorkspace || !section || !["create", "image", "video"].includes(section)) return;
@@ -1732,7 +1781,9 @@ export default function WorkspacePage() {
     );
     setGeneratedUrl("");
     setGeneratedAsset(null);
-    setNotice("Creating the project record...");
+    setNotice(videoProjectId && ["image", "video"].includes(section)
+      ? `Adding the ${section} to the selected project...`
+      : "Creating the project record...");
     let project;
     let campaignId = "";
     try {
@@ -1792,37 +1843,43 @@ export default function WorkspacePage() {
         avatarModel: videoMode === "avatar" ? avatarModel : null,
         avatarConsent: videoMode === "avatar" ? avatarConsent : false,
       };
-      const createResponse = await authFetch("/api/workspace/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: projectName.trim() || prompt.trim().slice(0, 60),
-          description: prompt.trim(),
+      if (["image", "video"].includes(section) && videoProjectId) {
+        const selectedProject = videoProjects.find((item) => item.id === videoProjectId);
+        if (!selectedProject) throw new Error("Choose an available project before generating the video.");
+        project = { id: selectedProject.id, name: selectedProject.name, configuration: selectedProject.configuration || {} };
+      } else {
+        const createResponse = await authFetch("/api/workspace/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: projectName.trim() || prompt.trim().slice(0, 60),
+            description: prompt.trim(),
+            prompt: enhancedPrompt,
+            inputMethod: inputMode.toUpperCase(),
+            platform,
+            aspectRatio: activeFormat.ratio,
+            outputType: requestedOutput,
+            configuration,
+          }),
+        });
+        const created = await createResponse.json();
+        if (!createResponse.ok)
+          throw new Error(created.error || "Unable to create the project.");
+        project = createProject({
+          id: created.data.id,
+          name: created.data.name,
+          status: "NOT_STARTED",
+          assets: 0,
+          style: selected,
           prompt: enhancedPrompt,
-          inputMethod: inputMode.toUpperCase(),
+          imageName,
           platform,
-          aspectRatio: activeFormat.ratio,
+          format: activeFormat.ratio,
           outputType: requestedOutput,
           configuration,
-        }),
-      });
-      const created = await createResponse.json();
-      if (!createResponse.ok)
-        throw new Error(created.error || "Unable to create the project.");
-      project = createProject({
-        id: created.data.id,
-        name: created.data.name,
-        status: "NOT_STARTED",
-        assets: 0,
-        style: selected,
-        prompt: enhancedPrompt,
-        imageName,
-        platform,
-        format: activeFormat.ratio,
-        outputType: requestedOutput,
-        configuration,
-        cost: 0,
-      });
+          cost: 0,
+        });
+      }
       if (inputMode === "campaign") {
         const campaignResponse = await authFetch("/api/workspace/campaigns", {
           method: "POST",
@@ -1864,7 +1921,7 @@ export default function WorkspacePage() {
         body: JSON.stringify({
           id: project.id,
           status: "IN_PROGRESS",
-          configuration: { ...configuration, campaignId: campaignId || null },
+          configuration: { ...(project.configuration || {}), ...configuration, campaignId: campaignId || null },
         }),
       });
       if (campaignId)
@@ -2090,6 +2147,18 @@ export default function WorkspacePage() {
                 />
               </label>
             </>
+          )}
+          {["image", "video"].includes(section) && (
+            <div className="form-row">
+              <label>
+                Save {section} to
+                <select value={videoProjectId} disabled={videoProjectsLoading} onChange={(event) => setVideoProjectId(event.target.value)}>
+                  <option value="">Create a new project</option>
+                  {videoProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                </select>
+                <small>{videoProjectId ? `The ${section} will be added to this project.` : `A new project will be created for this ${section}.`}</small>
+              </label>
+            </div>
           )}
           {section === "create" && inputMode === "voice" && (
             <InlineVoiceProjectInput
@@ -2489,10 +2558,10 @@ export default function WorkspacePage() {
           <button
             className="button generate"
             onClick={generate}
-            disabled={generating || (section === "video" || section === "create") && videoMode === "avatar" && !avatarConsent}
+            disabled={generating || ["image", "video"].includes(section) && videoProjectsLoading || (section === "video" || section === "create") && videoMode === "avatar" && !avatarConsent}
           >
             {generating
-              ? `Creating project... ${elapsedSeconds}s`
+              ? `${section === "create" ? "Creating project" : "Generating"}... ${elapsedSeconds}s`
               : section === "create"
                 ? "Create Project"
                 : `Generate ${section === "video" ? `${videoDuration}s video` : "creative"}`}{" "}
@@ -2637,6 +2706,7 @@ function AdCreator() {
   const [form, setForm] = useState({
     product: "",
     description: "",
+    offer: "",
     style: "Luxury",
     platform: "Instagram",
     format: "square",
@@ -2664,6 +2734,9 @@ function AdCreator() {
   const [voicePreviewDuration, setVoicePreviewDuration] = useState(null);
   const [referenceFile, setReferenceFile] = useState(null);
   const [referencePreview, setReferencePreview] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState("");
+  const [projectsLoading, setProjectsLoading] = useState(true);
   const [plan, setPlan] = useState(null);
   const [outputs, setOutputs] = useState([]);
   const [activeOutput, setActiveOutput] = useState("video");
@@ -2699,6 +2772,22 @@ function AdCreator() {
       .finally(() => { if (!cancelled) setBrandKitLoading(false); });
     return () => { cancelled = true; };
   }, [authFetch, isOrganizationWorkspace]);
+
+  useEffect(() => {
+    let cancelled = false;
+    authFetch("/api/workspace/projects?limit=100", { cache: "no-store" })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Unable to load projects.");
+        const available = (result.data || []).filter((project) => !["ARCHIVED", "FAILED"].includes(project.status));
+        if (cancelled) return;
+        setProjects(available);
+        setProjectId((current) => available.some((project) => project.id === current) ? current : available[0]?.id || "");
+      })
+      .catch((reason) => { if (!cancelled) setError(reason.message); })
+      .finally(() => { if (!cancelled) setProjectsLoading(false); });
+    return () => { cancelled = true; };
+  }, [authFetch]);
 
   const generateVoiceScript = async () => {
     const textToDescribe = form.description || form.product;
@@ -2818,7 +2907,8 @@ function AdCreator() {
             30,
             Math.max(5, Number.parseInt(template.duration, 10) || 5),
           ),
-          cta: transferred?.offer || template.cta || "Shop Now",
+          offer: transferred?.offer || template.offer || "",
+          cta: template.cta || current.cta || "Shop Now",
           brandColors,
           voiceover: !/music only|ambient/i.test(audioPreference),
           music: !/voiceover only|ambient/i.test(audioPreference),
@@ -3019,6 +3109,10 @@ function AdCreator() {
       setError("Enter the product name and description.");
       return;
     }
+    if (!form.offer.trim()) {
+      setError("Enter the offer for this campaign.");
+      return;
+    }
     if (form.outputType !== "Image" && form.outputType !== "Audio" && videoMode === "avatar") {
       if (!avatarConsent) {
         setError("Confirm that you have permission to use this image before generating an avatar video.");
@@ -3085,7 +3179,7 @@ function AdCreator() {
             audience:
               "Digital shoppers and customers interested in this product",
             objective: preset?.campaignType || "Product launch",
-            offer: form.cta,
+            offer: form.offer,
             platforms: form.platform,
             brandKit: form.brandColors || "Workspace brand kit",
             duration: "14 days",
@@ -3093,6 +3187,7 @@ function AdCreator() {
             budget: "Optimized for digital advertising",
           },
           applyBrandKit: isOrganizationWorkspace && applyBrandKit,
+          projectId: projectId || null,
         }),
       });
       const result = await response.json();
@@ -3103,20 +3198,11 @@ function AdCreator() {
       const creativePlan = result.campaign.plan;
       setPlan(creativePlan);
       setProgress(15);
-      const campaignCost = Number(
-        preset?.cost ||
-          (form.outputType === "Image + Video"
-            ? 36
-            : form.outputType === "Video"
-              ? 30
-              : 18),
-      );
-      const project = createProject({
+      const project = {
+        id: result.campaign.projectId,
         name: creativePlan.campaignName || `${form.product} campaign`,
-        style: form.style,
-        prompt: form.description,
-        cost: campaignCost,
-      });
+      };
+      if (!project.id) throw new Error("The campaign was not assigned to a project.");
       const kinds = [
         /(image|campaign)/i.test(form.outputType) && "image",
         /(video|campaign)/i.test(form.outputType) && "video",
@@ -3183,7 +3269,7 @@ function AdCreator() {
         <button
           className="button"
           onClick={generateCampaign}
-          disabled={running || templateLoading}
+          disabled={running || templateLoading || projectsLoading}
         >
           {templateLoading
             ? "Loading template..."
@@ -3205,6 +3291,14 @@ function AdCreator() {
       <div className="generator-layout">
         <section className="generator-form">
           <label>
+            Save campaign to
+            <select value={projectId} disabled={projectsLoading} onChange={(event) => setProjectId(event.target.value)}>
+              <option value="">Create a new project</option>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+            <small>{projectId ? "Campaign assets will be added to this project." : "A new project will be created for this campaign."}</small>
+          </label>
+          <label>
             Product name
             <input
               value={form.product}
@@ -3218,6 +3312,14 @@ function AdCreator() {
               value={form.description}
               onChange={(event) => update("description", event.target.value)}
               placeholder="Describe benefits, audience, offer and the creative you want."
+            />
+          </label>
+          <label>
+            Offer
+            <input
+              value={form.offer}
+              onChange={(event) => update("offer", event.target.value)}
+              placeholder="20% off your first order"
             />
           </label>
           <label className="dropzone">
