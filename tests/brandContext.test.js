@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildBrandContext, buildBrandedPrompt, selectBrandContext } from '../lib/brandContext.js';
-import { logoOverlayPosition } from '../lib/rendering/ffmpegRenderer.js';
+import { callToActionFilter, logoOverlayPosition } from '../lib/rendering/ffmpegRenderer.js';
 
 test('brand prompt enriches without replacing the user request', () => {
   const result = buildBrandedPrompt('Create a mindfulness app ad.', {
@@ -64,4 +64,17 @@ test('a user without active organization membership cannot load that organizatio
     /Organization access denied/,
   );
   assert.equal(brandKitRead, false);
+});
+
+test('video call-to-action filter supplies an explicit font file', () => {
+  const filter = callToActionFilter({
+    inputLabel: 'base',
+    text: 'Shop now',
+    fontFile: 'C:\\Windows\\Fonts\\arial.ttf',
+    brandColor: '#FF5A36',
+    fontSize: 59,
+    start: 2.5,
+  });
+  assert.match(filter, /drawtext=fontfile='C\\:\/Windows\/Fonts\/arial\.ttf'/);
+  assert.match(filter, /text='Shop now'/);
 });
