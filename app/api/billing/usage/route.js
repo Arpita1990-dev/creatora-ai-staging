@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOrganization } from "@/lib/auth";
+import { generationUsageTotals, workspaceEntitlements } from "@/lib/planCatalog";
+import { reconcileMuApiGenerationUsage } from "@/lib/muapiGenerationProxy";
 
 export async function GET(request) {
   try {
     const { user } = await requireOrganization(request);
+    await reconcileMuApiGenerationUsage(user);
+    const entitlement = await workspaceEntitlements(prisma, user.organizationId);
+    const planUsage = await generationUsageTotals(prisma, user.organizationId, entitlement);
     const jobs = await prisma.generationJob.findMany({
       where: {
         organizationId: user.organizationId,
@@ -39,6 +44,7 @@ export async function GET(request) {
         credits: job.chargedCredits,
         completedAt: job.completedAt || job.createdAt,
       })),
+      planUsage,
     });
   } catch (error) {
     return NextResponse.json({ error: error.message || "Unable to load credit history." }, { status: 401 });

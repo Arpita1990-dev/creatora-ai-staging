@@ -7,7 +7,7 @@ import {
 } from "@/lib/generationJobs";
 import { mediaUrlForWorkspace } from "@/lib/mediaDelivery";
 import { promptFromVoiceBrief } from "@/lib/voiceVideo";
-import { assertGenerationEntitlement, assertGenerationQuota, assertProjectCapacity, workspaceEntitlements } from "@/lib/planCatalog";
+import { assertGenerationEntitlement, createProjectWithCapacity, workspaceEntitlements } from "@/lib/planCatalog";
 
 export async function POST(request) {
   try {
@@ -30,7 +30,6 @@ export async function POST(request) {
     const generationKind = body.brief?.outputType === "AUDIO" ? "audio" : "video";
     const avatarVideo = Boolean(body.avatarConfig?.enabled);
     assertGenerationEntitlement(entitlement, { kind: generationKind, avatarVideo });
-    await assertGenerationQuota(prisma, entitlement, { organizationId: user.organizationId, kind: generationKind, avatarVideo });
     const brief = body.brief;
     if (!brief?.title || !Array.isArray(brief.scenes) || !brief.scenes.length)
       return NextResponse.json(
@@ -64,9 +63,7 @@ export async function POST(request) {
       { ...brief, duration },
       body.settings || {},
     );
-    if (entitlement.maxProjects != null) assertProjectCapacity(entitlement, await prisma.project.count({ where: { organizationId: user.organizationId } }));
-    const project = await prisma.project.create({
-      data: {
+    const project = await createProjectWithCapacity(prisma, user.organizationId, {
         id: `voice_project_${crypto.randomUUID()}`,
         organizationId: user.organizationId,
         createdById: user.sub,
@@ -79,8 +76,7 @@ export async function POST(request) {
         aspectRatio: brief.aspectRatio,
         outputType,
         status: "IN_PROGRESS",
-      },
-    });
+      });
     const campaign = await prisma.campaign.create({
       data: {
         id: `voice_campaign_${crypto.randomUUID()}`,
@@ -158,6 +154,7 @@ export async function POST(request) {
     );
   } catch (error) {
     if (error.code === "UPGRADE_REQUIRED") return NextResponse.json({ error: error.message, code: error.code }, { status: 403 });
+    if (error.code === "GENERATION_LIMIT_REACHED" || error.code === "PROJECT_LIMIT_REACHED") return NextResponse.json({ error: error.message, code: error.code, generationType: error.generationType, limit: error.limit, used: error.used }, { status: 403 });
     const status = /Authentication|Organization/.test(error.message)
       ? 401
       : /Too many/.test(error.message)

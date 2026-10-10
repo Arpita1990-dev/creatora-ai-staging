@@ -7,7 +7,7 @@ import {
 import { requireOrganization } from "@/lib/auth";
 import { publicErrorMessage } from "@/lib/publicErrors";
 import { prisma } from "@/lib/prisma";
-import { assertGenerationEntitlement, assertGenerationQuota, workspaceEntitlements } from "@/lib/planCatalog";
+import { assertGenerationEntitlement, workspaceEntitlements } from "@/lib/planCatalog";
 
 export async function POST(request) {
   try {
@@ -35,7 +35,6 @@ export async function POST(request) {
     }
     const entitlement = await workspaceEntitlements(prisma, user.organizationId);
     assertGenerationEntitlement(entitlement, { kind, avatarVideo: Boolean(avatarConfig?.enabled) });
-    await assertGenerationQuota(prisma, entitlement, { organizationId: user.organizationId, kind, avatarVideo: Boolean(avatarConfig?.enabled) });
     const job = await createGenerationJob({
       campaignId: String(formData.get("campaignId") || ""),
       projectId: String(formData.get("projectId") || ""),
@@ -64,6 +63,7 @@ export async function POST(request) {
     );
   } catch (error) {
     if (error.code === "UPGRADE_REQUIRED") return NextResponse.json({ error: error.message, code: error.code }, { status: 403 });
+    if (error.code === "GENERATION_LIMIT_REACHED") return NextResponse.json({ error: error.message, code: error.code, generationType: error.generationType, limit: error.limit, used: error.used }, { status: 403 });
     const status = /auth|token|jwt|claim timestamp|organization access/i.test(error.message || "")
       ? 401
       : /not found/i.test(error.message)

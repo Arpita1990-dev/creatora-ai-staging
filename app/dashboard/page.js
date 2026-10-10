@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { defaultWorkspace, getWorkspace } from "@/lib/workspaceStore";
+import { isGeneratedAssetLibraryItem } from "@/lib/assetWorkspaceScope";
 import MuApiStatusCard from "@/components/MuApiStatusCard";
 import CreateoraLoadingState from "@/app/components/CreateoraLoadingState";
 import {
@@ -171,9 +172,7 @@ export default function Dashboard() {
   const { authFetch, user } = useAuth();
   const [workspace, setWorkspace] = useState(defaultWorkspace);
   const [projects, setProjects] = useState([]);
-  const [projectHistory, setProjectHistory] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
-  const [assetIds, setAssetIds] = useState(() => new Set());
   const [listedAssets, setListedAssets] = useState([]);
   const [loadingAssets, setLoadingAssets] = useState(true);
   const [assetLoadFailed, setAssetLoadFailed] = useState(false);
@@ -196,17 +195,11 @@ export default function Dashboard() {
         if (!cancelled) {
           const projectData = result.data || [];
           setProjects(projectData);
-          setProjectHistory(result.statusHistory || projectData);
-          const projectAssetIds = projectData.flatMap((project) =>
-            (project.assets || []).map((asset) => asset.id).filter(Boolean),
-          );
-          setAssetIds((current) => new Set([...current, ...projectAssetIds]));
         }
       })
       .catch(() => {
         if (!cancelled) {
           setProjects([]);
-          setProjectHistory([]);
         }
       })
       .finally(() => {
@@ -225,10 +218,6 @@ export default function Dashboard() {
         if (!cancelled) {
           const loadedAssets = result.assets || [];
           setListedAssets(loadedAssets);
-          const listedAssetIds = loadedAssets
-            .map((asset) => asset.id)
-            .filter(Boolean);
-          setAssetIds((current) => new Set([...current, ...listedAssetIds]));
         }
       })
       .catch(() => {
@@ -251,20 +240,20 @@ export default function Dashboard() {
   }, []);
 
   const firstName = user?.firstName || workspace.profile.firstName;
-  const createdAssetCount = assetIds.size;
   const assetBreakdown = useMemo(() => {
     const counts = { IMAGE: 0, VIDEO: 0, AUDIO: 0, OTHER: 0 };
     const seen = new Set();
     const countAsset = (asset) => {
-      if (!asset || !asset.id || seen.has(asset.id)) return;
+      if (!isGeneratedAssetLibraryItem(asset) || !asset.id || seen.has(asset.id)) return;
       seen.add(asset.id);
       const type = String(asset.assetType || "").toUpperCase();
-      counts[type === "IMAGE" || type === "VIDEO" || type === "AUDIO" ? type : "OTHER"] += 1;
+      counts[type] += 1;
     };
     listedAssets.forEach(countAsset);
     projects.forEach((project) => (project.assets || []).forEach(countAsset));
     return counts;
   }, [listedAssets, projects]);
+  const createdAssetCount = assetBreakdown.IMAGE + assetBreakdown.VIDEO;
   const recentProjects = projects.filter((project) => project.status !== "ARCHIVED");
   const today = new Intl.DateTimeFormat("en", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase();
 
@@ -315,7 +304,7 @@ export default function Dashboard() {
             </>
           )}
         </article>
-        <MonthlyProjectChart projects={projectHistory} loading={loadingProjects} />
+        <MonthlyProjectChart projects={projects} loading={loadingProjects} />
       </section>
       <section className="content-section recent-creations">
         <div className="section-head">

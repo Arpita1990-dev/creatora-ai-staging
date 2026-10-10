@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 
 import { prisma } from "@/lib/prisma";
 import { createAssetRecord } from "@/lib/assetRepository";
-import { assetWorkspaceWhere } from "@/lib/assetWorkspaceScope";
+import { generatedAssetLibraryWhere } from "@/lib/assetWorkspaceScope";
 import { currentRefreshToken, hashToken } from "@/lib/auth";
 import { mediaUrlForWorkspace } from "@/lib/mediaDelivery";
 import { downloadAndStoreMedia } from "@/lib/storage";
@@ -65,7 +65,7 @@ export async function GET(request) {
     });
     if (!organization) return NextResponse.json({ error: "Workspace not found." }, { status: 404 });
     const records = await prisma.asset.findMany({
-      where: assetWorkspaceWhere({ accountType: organization.accountType, organizationId: user.organizationId, userId: user.sub }),
+      where: generatedAssetLibraryWhere({ accountType: organization.accountType, organizationId: user.organizationId, userId: user.sub }),
       orderBy: { createdAt: "desc" },
     });
     const assets = await Promise.all(records.map(async ({ provider, providerJobId, providerStatus, ...asset }) => ({

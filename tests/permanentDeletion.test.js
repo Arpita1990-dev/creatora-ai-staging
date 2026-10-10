@@ -12,6 +12,7 @@ function databaseStub({ jobs = [], campaigns = [], assets = [] } = {}) {
   });
   const tx = {
     generationJob: model('generationJob', jobs),
+    generationUsage: model('generationUsage'),
     providerAttempt: model('providerAttempt'),
     publishJob: model('publishJob'),
     asset: model('asset', assets),
@@ -34,10 +35,16 @@ test('asset deletion removes dependent attempts, jobs, publish records, and the 
     'project.updateMany',
     'generationJob.findMany',
     'providerAttempt.deleteMany',
+    'generationUsage.updateMany',
     'generationJob.deleteMany',
     'publishJob.deleteMany',
     'asset.deleteMany',
   ]);
+  const reservationCancellation = database.calls.find(([name]) => name === 'generationUsage.updateMany');
+  assert.deepEqual(reservationCancellation[1], {
+    where: { generationJobId: { in: ['job-1'] }, status: 'RESERVED' },
+    data: { status: 'CANCELLED', expiresAt: null },
+  });
 });
 
 test('project deletion is scoped to the confirmed project and removes its dependent records', async () => {

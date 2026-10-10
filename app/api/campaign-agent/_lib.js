@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireOrganization } from '@/lib/auth';
-import { workspaceEntitlements } from '@/lib/planCatalog';
+import { createProjectWithCapacity } from '@/lib/planCatalog';
 import { resolveMuApiKey } from '@/lib/providerCredentials';
 import { buildGroundedCampaignVideoPrompt, normalizeCampaignVideoDuration } from '@/lib/campaignVideoPrompt';
 import { calculateCampaignCreditEstimate, getCampaignCreditEstimate } from '@/lib/campaignCreditEstimate';
@@ -567,13 +567,7 @@ export async function persistCampaign(campaign) {
   const existing = await prisma.campaign.findUnique({ where: { id: campaign.id }, select: { projectId: true } });
   let projectId = existing?.projectId;
   if (!projectId) {
-    const entitlement = await workspaceEntitlements(prisma, campaign.workspaceId);
-    if (entitlement.maxProjects != null) {
-      const projectCount = await prisma.project.count({ where: { organizationId: campaign.workspaceId, status: { not: 'ARCHIVED' } } });
-      if (projectCount >= entitlement.maxProjects) throw new Error(`${entitlement.plan.name} supports up to ${entitlement.maxProjects} projects. Upgrade to create another campaign.`);
-    }
-    const project = await prisma.project.create({
-      data: {
+    const project = await createProjectWithCapacity(prisma, campaign.workspaceId, {
         id: `campaign_project_${crypto.randomUUID()}`,
         organizationId: campaign.workspaceId,
         createdById: campaign.userId,
@@ -585,8 +579,7 @@ export async function persistCampaign(campaign) {
         platform: String(campaign.brief?.platforms || '').split(',')[0]?.trim() || null,
         outputType: 'CAMPAIGN',
         status: 'IN_PROGRESS',
-      },
-    });
+      });
     projectId = project.id;
   }
   await prisma.campaign.upsert({

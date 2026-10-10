@@ -61,11 +61,11 @@ function normalizePredictionResult(submitData, result, outputUrl) {
     };
 }
 
-async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60) {
+async function submitAndPoll(endpoint, payload, key, onRequestId, maxAttempts = 60, generationType = null) {
     const url = `${BASE_URL}/api/v1/${endpoint}`;
     const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, ...(generationType ? { 'x-creatora-generation-type': generationType } : {}) },
         body: JSON.stringify(payload)
     });
     if (!response.ok) {
@@ -102,7 +102,7 @@ export async function generateImage(apiKey, params) {
         payload.image_url = null;
     }
     if (params.seed && params.seed !== -1) payload.seed = params.seed;
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60, 'IMAGE');
 }
 
 export async function generateI2I(apiKey, params) {
@@ -132,7 +132,7 @@ export async function generateI2I(apiKey, params) {
     if (modelInfo?.inputs?.name) {
         payload.name = params.name || modelInfo.inputs.name.default;
     }
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 60, 'IMAGE');
 }
 
 export async function decomposeLayers(apiKey, params) {
@@ -143,7 +143,7 @@ export async function decomposeLayers(apiKey, params) {
         resolution: params.resolution || 'auto',
         output_format: params.output_format || 'png'
     };
-    const result = await submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 300);
+    const result = await submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 300, 'IMAGE');
     const rawImages = result.images || result.output?.images || result.outputs || (result.url ? [result.url] : []);
     const images = Array.isArray(rawImages) ? rawImages : [rawImages];
     return { ...result, images };
@@ -172,7 +172,7 @@ export async function generateVideo(apiKey, params) {
     if (!mediaCapabilities.video.field && params.video_files?.length > 0) payload.video_files = params.video_files;
     Object.assign(payload, serializeVideoToolOptions(modelInfo, params.options));
     payload = includeRequiredArrayDefaults(modelInfo, payload);
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function generateI2V(apiKey, params) {
@@ -194,7 +194,7 @@ export async function generateI2V(apiKey, params) {
         payload.name = params.name || modelInfo.inputs.name.default;
     }
     payload = includeRequiredArrayDefaults(modelInfo, payload);
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function generateMarketingStudioAd(apiKey, params) {
@@ -206,7 +206,7 @@ export async function generateMarketingStudioAd(apiKey, params) {
         images_list: params.images_list || [],
         video_files: params.video_files || []
     };
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function processV2V(apiKey, params) {
@@ -229,7 +229,7 @@ export async function processV2V(apiKey, params) {
         }
     }
     payload = includeRequiredArrayDefaults(modelInfo, payload);
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function estimateV2VCost(params, signal) {
@@ -289,7 +289,7 @@ export async function processRecast(apiKey, params) {
     if (params.character_orientation) {
         payload.character_orientation = params.character_orientation;
     }
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function processMotionControl(apiKey, params) {
@@ -336,7 +336,7 @@ export async function processMotionControl(apiKey, params) {
         if (params.seed !== undefined && params.seed !== -1) payload.seed = Number(params.seed);
     }
 
-    return submitAndPoll(model, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(model, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function processLipSync(apiKey, params) {
@@ -349,7 +349,7 @@ export async function processLipSync(apiKey, params) {
     if (modelInfo?.hasPrompt) payload.prompt = params.prompt || '';
     if (params.resolution) payload.resolution = params.resolution;
     if (params.seed !== undefined && params.seed !== -1) payload.seed = params.seed;
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function generateAudio(apiKey, params) {
@@ -363,7 +363,7 @@ export async function generateAudio(apiKey, params) {
             payload[key] = params[key];
         }
     }
-    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll(endpoint, payload, apiKey, params.onRequestId, 900, 'AUDIO');
 }
 
 export function uploadFile(apiKey, file, onProgress) {
@@ -997,7 +997,7 @@ export async function runClipping(apiKey, params) {
         aspect_ratio: params.aspect_ratio || "9:16",
         return_coordinates_only: !!params.return_coordinates_only
     };
-    return submitAndPoll("ai-clipping", payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll("ai-clipping", payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function runMotionGraphics(apiKey, params) {
@@ -1006,7 +1006,7 @@ export async function runMotionGraphics(apiKey, params) {
         aspect_ratio: params.aspect_ratio || "16:9",
         duration_seconds: params.duration_seconds || 6,
     };
-    return submitAndPoll("motion-graphics", payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll("motion-graphics", payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function runMotionGraphicsEdit(apiKey, params) {
@@ -1016,7 +1016,7 @@ export async function runMotionGraphicsEdit(apiKey, params) {
         aspect_ratio: params.aspect_ratio || "16:9",
         duration_seconds: params.duration_seconds || 6,
     };
-    return submitAndPoll("motion-graphics-edit", payload, apiKey, params.onRequestId, 900);
+    return submitAndPoll("motion-graphics-edit", payload, apiKey, params.onRequestId, 900, 'VIDEO');
 }
 
 export async function upscaleImage(apiKey, { model, image_url, resolution, upscale_factor, onRequestId }) {
@@ -1029,17 +1029,17 @@ export async function upscaleImage(apiKey, { model, image_url, resolution, upsca
     } else if (model === "ai-image-upscaler") {
         endpoint = "ai-image-upscale";
     }
-    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90, 'IMAGE');
 }
 
 export async function removeBackground(apiKey, { image_url, onRequestId }) {
     const endpoint = "ai-background-remover";
     const payload = { image_url };
-    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90, 'IMAGE');
 }
 
 export async function expandImage(apiKey, { image_url, onRequestId }) {
     const endpoint = "ai-image-extension";
     const payload = { image_url };
-    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90);
+    return submitAndPoll(endpoint, payload, apiKey, onRequestId, 90, 'IMAGE');
 }

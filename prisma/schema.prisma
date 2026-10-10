@@ -401,6 +401,13 @@ enum GenerationStatus {
   CANCELLED
 }
 
+enum GenerationUsageStatus {
+  RESERVED
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 enum ProviderAttemptStatus {
   QUEUED
   RUNNING
@@ -549,6 +556,26 @@ model GenerationJob {
   @@index([campaignId])
   @@index([providerJobId])
   @@index([status])
+}
+
+model GenerationUsage {
+  id                String               @id @default(cuid())
+  organizationId    String
+  userId            String
+  idempotencyKey    String               @unique
+  generationJobId   String?              @unique
+  providerRequestId String?              @unique
+  generationType    GenerationType
+  status            GenerationUsageStatus @default(RESERVED)
+  avatarVideo       Boolean              @default(false)
+  planAtGeneration  String
+  countedAt         DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([organizationId, generationType, status])
+  @@index([organizationId, createdAt])
 }
 
 model ProviderAttempt {

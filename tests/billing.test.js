@@ -208,7 +208,7 @@ test("provider failures return safe errors without secret/raw response details",
 
 test("server-side project and social capacity gates enforce all advertised limits", () => {
   assert.doesNotThrow(() => assertProjectCapacity(PLAN_CATALOG.free, 1));
-  assert.throws(() => assertProjectCapacity(PLAN_CATALOG.free, 2), { code: "UPGRADE_REQUIRED" });
+  assert.throws(() => assertProjectCapacity(PLAN_CATALOG.free, 2), { code: "PROJECT_LIMIT_REACHED", limit: 2, used: 2 });
   assert.doesNotThrow(() => assertProjectCapacity(PLAN_CATALOG.pro, 10000));
   for (const platform of ["FACEBOOK", "INSTAGRAM", "LINKEDIN", "YOUTUBE"]) {
     assert.throws(() => assertSocialAccountCapacity(PLAN_CATALOG.free, platform, 0), { code: "UPGRADE_REQUIRED" });

@@ -3235,6 +3235,46 @@ button {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.billing-plan-usage {
+  margin-top: 32px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.billing-plan-usage h2 {
+  margin: 0 0 14px;
+  font-size: 20px;
+}
+
+.billing-plan-usage-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.billing-plan-usage-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.billing-plan-usage-grid span,
+.billing-plan-usage p {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.billing-plan-usage-grid strong {
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.billing-plan-usage p {
+  margin: 14px 0 0;
+  line-height: 1.5;
+}
+
 .billing-provider-balance > div {
   min-width: 0;
 }
@@ -3400,6 +3440,10 @@ button {
 }
 
 @media (max-width: 720px) {
+  .billing-plan-usage-grid {
+    grid-template-columns: 1fr;
+  }
+
   .billing-credit-usage-grid {
     grid-template-columns: 1fr;
   }

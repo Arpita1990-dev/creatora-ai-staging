@@ -24,6 +24,7 @@ export async function POST(request) {
     const campaign = await saveCampaign({ id: makeCampaignId(), userId: user.userId, workspaceId: user.workspaceId, brief, plan, source, status: 'strategy_ready', approvals: { strategy: false, content: false, assets: false }, createdAt: new Date().toISOString() });
     return campaignJson({ campaign });
   } catch (error) {
+    if (error.code === 'PROJECT_LIMIT_REACHED') return campaignJson({ error: error.message, code: error.code, limit: error.limit, used: error.used }, { status: 403 });
     return campaignJson({ error: error.message || 'Campaign planning failed.' }, { status: 500 });
   }
 }

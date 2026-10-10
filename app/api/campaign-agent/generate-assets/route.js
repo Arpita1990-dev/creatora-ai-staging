@@ -58,6 +58,7 @@ export async function POST(request) {
         }
         createdJobs.push(serializeGenerationJob(job));
       } catch (error) {
+        if (error.code === 'GENERATION_LIMIT_REACHED') throw error;
         createdJobs.push({ jobId: null, assetId: null, type: asset.type, title: asset.title, status: 'FAILED', progress: 100, prompt: asset.prompt, platform: asset.platform, format: asset.aspectRatio, duration: asset.duration || null, estimatedCredits: asset.estimatedCredits, error: error.message || 'Generation could not be queued.' });
       }
     }
@@ -74,6 +75,7 @@ export async function POST(request) {
     }) : job));
     return campaignJson({ campaignId, jobs: responseJobs, estimatedCredits, remainingCredits }, { status: 202 });
   } catch (error) {
+    if (error.code === 'GENERATION_LIMIT_REACHED' || error.code === 'PROJECT_LIMIT_REACHED') return campaignJson({ error: error.message, code: error.code, generationType: error.generationType, limit: error.limit, used: error.used }, { status: 403 });
     return campaignJson({ error: error.message || 'Campaign asset generation failed.' }, { status: 500 });
   }
 }

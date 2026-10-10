@@ -32,7 +32,7 @@ const sourceModule = (source) => `data:text/javascript,${encodeURIComponent(sour
 const hooks = registerHooks({ resolve(specifier, context, nextResolve) {
   if (specifier === "@/lib/prisma") return { url: sourceModule("export const prisma = globalThis.__creatoraBillingDatabase;"), shortCircuit: true };
   if (specifier === "@/lib/auth") return { url: sourceModule("export const requireOrganization = async () => globalThis.__creatoraBillingContext; export const checkRateLimit = () => {};"), shortCircuit: true };
-  if (specifier === "@/lib/generationJobs") return { url: sourceModule("export const createGenerationJob = async () => { globalThis.__creatoraBillingGenerationCalls += 1; return { id: 'job-test', status: 'QUEUED' }; }; export const serializeGenerationJob = value => value; export const serializeGenerationJobForWorkspace = value => value;"), shortCircuit: true };
+  if (specifier === "@/lib/generationJobs") return { url: sourceModule("export const createGenerationJob = async () => { if (globalThis.__creatoraBillingState.imageCount >= 5) { const error = new Error('Free generation limit reached.'); error.code = 'GENERATION_LIMIT_REACHED'; error.generationType = 'IMAGE'; error.limit = 5; error.used = 5; throw error; } globalThis.__creatoraBillingGenerationCalls += 1; return { id: 'job-test', status: 'QUEUED' }; }; export const serializeGenerationJob = value => value; export const serializeGenerationJobForWorkspace = value => value;"), shortCircuit: true };
   if (specifier === "next/server") return { url: sourceModule("export const NextResponse = { json: (data, options) => Response.json(data, options) };"), shortCircuit: true };
   if (specifier.startsWith("@/lib/")) return { url: new URL(`../lib/${specifier.slice(6)}.js`, import.meta.url).href, shortCircuit: true };
   return nextResolve(specifier, context);
@@ -52,6 +52,7 @@ function setup() {
   process.env.ALLOW_FREE_VIDEO = "true";
   process.env.ALLOW_FREE_AVATAR_VIDEO = "true";
   state = { plans: new Map(Object.values(PLAN_CATALOG).map((plan) => [plan.code, { ...plan, id: plan.code }])), subscription: { id: "test-subscription", organizationId: "workspace-one", planId: "free", status: "TRIALING", provider: null, providerSubscriptionId: null, cancelAtPeriodEnd: false, pendingPlanId: null, pendingChangeType: null, pendingChangeStatus: null, pendingProviderSubscriptionId: null, updatedAt: new Date(0) }, writes: 0, providerCalls: [], imageCount: 0, cancelApplies: false, cancelFails: false, cancelNetworkFails: false, cancelResponse: null, upgradeMode: "success", subscriptionsCreated: 0, upgradeRemote: null };
+  globalThis.__creatoraBillingState = state;
   globalThis.__creatoraBillingContext = { user: { sub: "test-owner", organizationId: "workspace-one" }, membership: { role: "OWNER" } };
   globalThis.__creatoraBillingGenerationCalls = 0;
   const fetch = globalThis.fetch;

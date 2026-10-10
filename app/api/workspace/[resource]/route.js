@@ -3,14 +3,14 @@ import { randomBytes, createHash } from 'node:crypto';
 import { prisma } from '@/lib/prisma';
 import { requireOrganization } from '@/lib/auth';
 import { mediaUrlForWorkspace } from '@/lib/mediaDelivery';
-import { workspaceEntitlements } from '@/lib/planCatalog';
+import { assertProjectCapacity, lockWorkspaceQuota, workspaceEntitlements } from '@/lib/planCatalog';
 import { collapseProjectsByCategory, projectCategoryKey, projectStatusHistory, projectStatusKey, uniqueProjectAssets } from '@/lib/projectCategories';
 import { permanentlyDeleteProjects } from '@/lib/permanentDeletion';
 
 const models = { projects: 'project', campaigns: 'campaign', workflows: 'workflow', templates: 'template', notifications: 'notification', integrations: 'integrationConnection', 'api-keys': 'apiKey' };
 const json = (data, status = 200) => NextResponse.json(data, { status });
 const pageOptions = (request) => { const params = new URL(request.url).searchParams; return { take: Math.min(Math.max(Number(params.get('limit') || 30), 1), 100), skip: Math.max(Number(params.get('offset') || 0), 0) }; };
-const publicAsset = ({ provider, providerJobId, providerStatus, ...asset }) => asset;
+const publicAsset = ({ provider, providerJobId, providerStatus, ...asset }) => ({ ...asset, generated: provider !== 'LOCAL_REFERENCE' });
 const publicProject = ({ successfulProvider, successfulProviderTaskId, ...project }) => project;
 
 // Thumbnails are rendered through plain <img>/<video> tags, which cannot send the
@@ -103,33 +103,34 @@ export async function POST(request, { params }) {
     if (['VIEWER', 'REVIEWER'].includes(membership.role)) return json({ error: 'Insufficient permission.' }, 403);
     if (resource === 'projects') {
       const requestedName = String(body.name || 'Untitled project').trim().replace(/\s+/g, ' ').slice(0, 200) || 'Untitled project';
-      const activeProjects = await prisma.project.findMany({ where: { organizationId, status: { not: 'ARCHIVED' } }, orderBy: { updatedAt: 'desc' } });
-      const reusable = activeProjects.find((project) =>
-        projectCategoryKey(project.name) === projectCategoryKey(requestedName)
-        && ['NOT_STARTED', 'IN_PROGRESS', 'DRAFT', 'ACTIVE'].includes(project.status)
-      );
-      if (reusable) {
-        const reused = await prisma.project.update({
-          where: { id: reusable.id },
-          data: {
-            name: requestedName,
-            description: body.description || null,
-            prompt: body.prompt || null,
-            configuration: JSON.stringify(body.configuration || {}),
-            inputMethod: String(body.inputMethod || 'TEXT').toUpperCase(),
-            platform: body.platform || null,
-            aspectRatio: body.aspectRatio || null,
-            outputType: String(body.outputType || 'IMAGE').toUpperCase(),
-            status: 'NOT_STARTED',
-          },
-        });
-        return json({ data: publicProject(reused), reused: true });
-      }
-      const entitlement = await workspaceEntitlements(prisma, organizationId);
-      if (entitlement.maxProjects != null) {
-        const projectCount = new Set(activeProjects.map((project) => projectCategoryKey(project.name))).size;
-        if (projectCount >= entitlement.maxProjects) return json({ error: `${entitlement.plan.name} supports up to ${entitlement.maxProjects} projects. Upgrade to create another project.` }, 403);
-      }
+      const projectData = {
+        organizationId, createdById: user.sub, name: requestedName,
+        description: body.description || null, prompt: body.prompt || null,
+        configuration: JSON.stringify(body.configuration || {}),
+        inputMethod: String(body.inputMethod || 'TEXT').toUpperCase(),
+        platform: body.platform || null, aspectRatio: body.aspectRatio || null,
+        outputType: String(body.outputType || 'IMAGE').toUpperCase(),
+        status: 'NOT_STARTED', thumbnailUrl: body.thumbnailUrl || null,
+      };
+      const reusableData = {
+        name: projectData.name, description: projectData.description, prompt: projectData.prompt,
+        configuration: projectData.configuration, inputMethod: projectData.inputMethod,
+        platform: projectData.platform, aspectRatio: projectData.aspectRatio,
+        outputType: projectData.outputType, status: projectData.status,
+      };
+      const result = await prisma.$transaction(async (tx) => {
+        await lockWorkspaceQuota(tx, organizationId);
+        const activeProjects = await tx.project.findMany({ where: { organizationId, status: { not: 'ARCHIVED' } }, orderBy: { updatedAt: 'desc' } });
+        const reusable = activeProjects.find((project) =>
+          projectCategoryKey(project.name) === projectCategoryKey(requestedName)
+          && ['NOT_STARTED', 'IN_PROGRESS', 'DRAFT', 'ACTIVE'].includes(project.status)
+        );
+        if (reusable) return { project: await tx.project.update({ where: { id: reusable.id }, data: reusableData }), reused: true };
+        const entitlement = await workspaceEntitlements(tx, organizationId);
+        assertProjectCapacity(entitlement, activeProjects.length);
+        return { project: await tx.project.create({ data: projectData }), reused: false };
+      });
+      return json({ data: publicProject(result.project), reused: result.reused }, result.reused ? 200 : 201);
     }
     if (resource === 'api-keys') {
       const rawKey = `crt_${randomBytes(32).toString('base64url')}`;
@@ -147,8 +148,8 @@ export async function POST(request, { params }) {
     const created = await prisma[model].create({ data: dataByResource[resource] });
     return json({ data: resource === 'projects' ? publicProject(created) : created }, 201);
   } catch (error) {
-    const status = /auth|token|jwt|claim timestamp|organization access/i.test(error.message || '') ? 401 : 400;
-    return json({ error: error.message || 'Request failed.' }, status);
+    const status = error.code === 'PROJECT_LIMIT_REACHED' ? 403 : /auth|token|jwt|claim timestamp|organization access/i.test(error.message || '') ? 401 : 400;
+    return json({ error: error.message || 'Request failed.', ...(error.code ? { code: error.code } : {}), ...(error.limit != null ? { limit: error.limit, used: error.used } : {}) }, status);
   }
 }
 

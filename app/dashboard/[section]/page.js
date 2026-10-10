@@ -34,6 +34,7 @@ import { getLanguageConfig, getVoiceOptions } from "@/lib/tts/languages.js";
 import { AVATAR_MODEL_OPTIONS, getStockAvatar } from "@/lib/avatar/avatars.js";
 import { loadRazorpayCheckout } from "@/lib/razorpayCheckout.js";
 import { uniqueProjectAssets } from "@/lib/projectCategories.js";
+import { isGeneratedAssetLibraryItem } from "@/lib/assetWorkspaceScope.js";
 import PresenterPicker from "@/components/PresenterPicker";
 import AvatarVideoControls from "@/components/AvatarVideoControls";
 
@@ -3785,7 +3786,7 @@ function CollectionPage({ section, title, subtitle }) {
           ? (projectsResult.data || []).flatMap((project) => project.assets || [])
           : [];
       const uniqueAssets = new Map();
-      uniqueProjectAssets(assets).forEach((asset) => {
+      uniqueProjectAssets(assets).filter(isGeneratedAssetLibraryItem).forEach((asset) => {
         if (!asset?.id || uniqueAssets.has(asset.id)) return;
         let platforms = asset.platforms || [];
         if (typeof platforms === "string") {
@@ -6545,6 +6546,7 @@ function BillingCredits({ workspace, authFetch, notify, notice }) {
   const [creditHistory, setCreditHistory] = useState([]);
   const [creditHistoryLoading, setCreditHistoryLoading] = useState(true);
   const [creditHistoryError, setCreditHistoryError] = useState("");
+  const [planUsage, setPlanUsage] = useState(null);
   const loadBilling = async () => {
     setLoading(true);
     try {
@@ -6564,6 +6566,7 @@ function BillingCredits({ workspace, authFetch, notify, notice }) {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Unable to load credit history.");
       setCreditHistory(result.usage || []);
+      setPlanUsage(result.planUsage || null);
       setCreditHistoryError("");
     } catch (error) {
       setCreditHistoryError(error.message);
@@ -6719,6 +6722,15 @@ function BillingCredits({ workspace, authFetch, notify, notice }) {
       {billing?.planChangePending && <p className="auth-status" role="status">Your upgrade to {billing.pendingPlan?.name || "the selected plan"} is processing. Your current plan and entitlements remain unchanged until Razorpay confirms the transition.</p>}
       {billing?.subscription?.cancelAtPeriodEnd && cancellationDateLong && <p className="auth-status billing-cancellation-notice" role="status"><strong>Your {billing.subscription.plan.name} subscription is set to cancel.</strong> You&#39;ll continue to have access to {billing.subscription.plan.name} features until {cancellationDateLong}. After that, your workspace will switch to the Free plan and you won&#39;t be charged again.</p>}
       {billing?.canManage && billing?.subscription?.status === "ACTIVE" && !billing.subscription.cancelAtPeriodEnd && billing.subscription.plan.code !== "free" && <button className="button secondary" onClick={cancelPlan}>Cancel subscription</button>}
+      {planUsage?.plan === "free" && <section className="billing-plan-usage" aria-labelledby="billing-plan-usage-title">
+        <h2 id="billing-plan-usage-title">Free Plan Usage</h2>
+        <div className="billing-plan-usage-grid">
+          <div><span>Projects</span><strong>{planUsage.projects.used} / {planUsage.projects.limit}</strong></div>
+          <div><span>AI Images</span><strong>{planUsage.images.used} / {planUsage.images.limit}</strong></div>
+          <div><span>AI Videos</span><strong>{planUsage.videos.used} / {planUsage.videos.limit}</strong></div>
+        </div>
+        <p>Generation limits count successful creations. Pending generations temporarily reserve a slot. Deleting a completed image or video does not restore your allowance. Failed generations do not count.</p>
+      </section>}
       <section className="billing-provider-balance" aria-labelledby="billing-provider-title">
         <div>
           <h2 id="billing-provider-title">AI Generation Balance</h2>
